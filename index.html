@@ -1,1 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards de Oposiciones - Estudio con IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .card {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
+        }
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2b6cb0;
+        }
+        .btn-primary:disabled {
+            background-color: #4a5568;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #4a5568;
+        }
+        .btn-secondary:hover {
+            background-color: #2d3748;
+        }
+        .btn-ai {
+            background-color: #5b21b6;
+            color: white;
+        }
+        .btn-ai:hover {
+            background-color: #4c1d95;
+        }
+        .input-dark {
+            background-color: #1a202c;
+            border-color: #4a5568;
+        }
+        .feedback-correct {
+            background-color: #2f855a;
+            border-left-color: #68d391;
+        }
+        .feedback-incorrect {
+            background-color: #c53030;
+            border-left-color: #fc8181;
+        }
+        .ai-response-card {
+            background-color: rgba(76, 29, 149, 0.3);
+            border-left: 4px solid #8b5cf6;
+        }
+        .spinner {
+            border-top-color: #a78bfa;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-spinner {
+            border: 4px solid #4a5568;
+            border-top: 4px solid #4299e1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
 
+    <div id="app-container" class="w-full max-w-3xl mx-auto">
+
+        <!-- 1. Pantalla de Configuración -->
+        <div id="setup-screen" class="card p-8 rounded-xl shadow-lg transition-opacity duration-500">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-white">Flashcards de Oposiciones con IA</h1>
+                <p class="mt-2 text-slate-400">Preparando tu banco de preguntas administrativas...</p>
+            </div>
+            
+            <div class="mt-8 space-y-6">
+                <div id="loading-section" class="text-center">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-slate-300">Cargando preguntas desde GitHub...</p>
+                </div>
+                
+                <div id="config-section" class="hidden">
+                    <div>
+                        <label for="num-questions" class="block text-sm font-medium text-slate-300">Número de preguntas para el cuestionario</label>
+                        <input type="number" id="num-questions" class="input-dark mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" placeholder="Ej: 10" disabled>
+                    </div>
+                </div>
+                
+                <div id="info-box" class="text-center text-sm text-slate-300 bg-slate-700 p-3 rounded-lg hidden"></div>
+                <div id="error-box" class="text-center text-sm text-red-300 bg-red-800 bg-opacity-50 p-3 rounded-lg hidden"></div>
+            </div>
+
+            <div class="mt-8">
+                <button id="start-button" class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-all" disabled>
+                    Empezar Cuestionario
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Pantalla del Cuestionario -->
+        <div id="quiz-screen" class="hidden card p-8 rounded-xl shadow-lg transition-opacity duration-500">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white">Pregunta <span id="current-q-num"></span> de <span id="total-q-num"></span></h2>
+                <div id="question-category" class="text-sm bg-blue-900 text-blue-300 font-semibold py-1 px-3 rounded-full"></div>
+            </div>
+            
+            <div class="bg-slate-900 p-6 rounded-lg min-h-[120px] flex items-center justify-center">
+                <p id="question-text" class="text-lg text-center font-semibold text-slate-200"></p>
+            </div>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <textarea id="user-answer" rows="3" class="input-dark w-full p-4 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribe o dicta tu respuesta..."></textarea>
+                    <button id="mic-button" class="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 hover:text-blue-400" title="Contestar por voz">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>
+                <p id="mic-status" class="text-sm text-center mt-2 text-slate-500 h-5"></p>
+            </div>
+
+            <div class="mt-4">
+                <button id="verify-button" class="w-full btn-secondary font-bold py-3 px-4 rounded-lg transition-all">Verificar Respuesta</button>
+            </div>
+
+            <!-- Sección de Feedback -->
+            <div id="feedback-section" class="hidden mt-6 space-y-4">
+                <div id="feedback-message" class="p-4 text-white font-bold rounded-lg border-l-4 text-center"></div>
+                <div class="p-4 bg-slate-900 rounded-lg">
+                    <h4 class="font-bold text-slate-300">Respuesta Correcta:</h4>
+                    <p id="correct-answer-text" class="mt-1 text-slate-300"></p>
+                    <h4 class="font-bold text-slate-300 mt-3">Justificación:</h4>
+                    <p id="reasoning-text" class="mt-1 text-slate-400"></p>
+                    
+                    <div class="mt-4">
+                        <a id="legal-ref-link" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline">
+                            <span class="font-bold">📖 Referencia legal:</span>
+                            <span id="legal-ref-text"></span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Botón y contenedor de IA -->
+                <button id="ai-enhance-button" class="w-full btn-ai font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">Explicar con IA 🤖</button>
+                <div id="ai-response-container" class="hidden p-4 rounded-lg ai-response-card">
+                    <div id="ai-spinner" class="flex items-center justify-center gap-2 text-violet-300">
+                        <div class="spinner h-5 w-5 rounded-full border-2 border-transparent"></div>
+                        Analizando...
+                    </div>
+                    <div id="ai-response-content"></div>
+                </div>
+
+                <div id="evaluation-buttons" class="grid grid-cols-2 gap-4">
+                    <button id="correct-btn" class="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-all">✅ ¡La acerté!</button>
+                    <button id="incorrect-btn" class="flex items-center justify-center gap-2 w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-all">❌ A repasar</button>
+                </div>
+                <button id="next-question-button" class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-all hidden">Siguiente Pregunta</button>
+            </div>
+        </div>
+
+        <!-- 3. Pantalla de Resultados -->
+        <div id="results-screen" class="hidden card p-8 rounded-xl shadow-lg transition-opacity duration-500">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-white">¡Sesión Finalizada!</h2>
+                <p id="final-message" class="mt-4 text-lg text-slate-300"></p>
+            </div>
+            <div class="mt-8 p-4 bg-slate-900 rounded-lg text-center">
+                <h3 class="text-xl font-bold text-white mb-2">Tus Resultados</h3>
+                <div class="flex justify-center gap-8 text-2xl">
+                    <div><span class="font-bold text-green-400" id="correct-count"></span> Correctas</div>
+                    <div><span class="font-bold text-red-400" id="incorrect-count"></span> Incorrectas</div>
+                </div>
+            </div>
+            <div id="review-section" class="mt-6 hidden">
+                <h3 class="text-xl font-bold text-white mb-4">Conceptos a Repasar</h3>
+                <div id="review-list" class="space-y-4 max-h-60 overflow-y-auto pr-2"></div>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-xl font-bold text-white mb-4">Estadísticas de Preguntas</h3>
+                <div class="max-h-60 overflow-y-auto pr-2">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-700 text-slate-300">
+                            <tr><th class="p-2">Pregunta</th><th class="p-2 w-28 text-center">Formulada</th></tr>
+                        </thead>
+                        <tbody id="occurrence-table-body" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-8">
+                <button id="restart-button" class="w-full btn-primary font-bold py-3 px-6 rounded-lg transition-all">Empezar de Nuevo</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- SELECTORES DEL DOM ---
+        const setupScreen = document.getElementById('setup-screen'),
+              quizScreen = document.getElementById('quiz-screen'),
+              resultsScreen = document.getElementById('results-screen'),
+              loadingSection = document.getElementById('loading-section'),
+              configSection = document.getElementById('config-section'),
+              numQuestionsInput = document.getElementById('num-questions'),
+              startButton = document.getElementById('start-button'),
+              errorBox = document.getElementById('error-box'),
+              infoBox = document.getElementById('info-box'),
+              category = document.getElementById('question-category'),
+              questionText = document.getElementById('question-text'),
+              userAnswer = document.getElementById('user-answer'),
+              micButton = document.getElementById('mic-button'),
+              micStatus = document.getElementById('mic-status'),
+              verifyButton = document.getElementById('verify-button'),
+              feedbackSection = document.getElementById('feedback-section'),
+              feedbackMessage = document.getElementById('feedback-message'),
+              correctAnswerText = document.getElementById('correct-answer-text'),
+              reasoningText = document.getElementById('reasoning-text'),
+              legalRefLink = document.getElementById('legal-ref-link'),
+              legalRefText = document.getElementById('legal-ref-text'),
+              aiEnhanceButton = document.getElementById('ai-enhance-button'),
+              aiResponseContainer = document.getElementById('ai-response-container'),
+              aiSpinner = document.getElementById('ai-spinner'),
+              aiResponseContent = document.getElementById('ai-response-content'),
+              evalButtons = document.getElementById('evaluation-buttons'),
+              correctBtn = document.getElementById('correct-btn'),
+              incorrectBtn = document.getElementById('incorrect-btn'),
+              nextButton = document.getElementById('next-question-button'),
+              currentQNum = document.getElementById('current-q-num'),
+              totalQNum = document.getElementById('total-q-num'),
+              finalMessage = document.getElementById('final-message'),
+              correctCount = document.getElementById('correct-count'),
+              incorrectCount = document.getElementById('incorrect-count'),
+              reviewSection = document.getElementById('review-section'),
+              reviewList = document.getElementById('review-list'),
+              occurrenceTableBody = document.getElementById('occurrence-table-body'),
+              restartButton = document.getElementById('restart-button');
+
+        // --- ESTADO DE LA APP ---
+        let allQuestions = [], quizQuestions = [], correctAnswers = [], incorrectAnswers = [], currentQuestionIndex = 0;
+        const OCCURRENCE_KEY = 'flashcardOccurrences';
+        const CSV_URL = './ADMINISTRATIVO.csv'; // Archivo CSV en el mismo directorio
+
+        // --- LÓGICA DE LA APP ---
+
+        const occurrenceTracker = {
+            get: () => JSON.parse(localStorage.getItem(OCCURRENCE_KEY)) || {},
+            save: (data) => localStorage.setItem(OCCURRENCE_KEY, JSON.stringify(data)),
+            init: (questions) => {
+                const data = occurrenceTracker.get();
+                let updated = false;
+                questions.forEach(q => {
+                    if (q && q.ID && data[q.ID] === undefined) {
+                        data[q.ID] = 0;
+                        updated = true;
+                    }
+                });
+                if (updated) occurrenceTracker.save(data);
+            },
+            increment: (questionId) => {
+                if (!questionId) return;
+                const data = occurrenceTracker.get();
+                if (data[questionId] !== undefined) {
+                    data[questionId]++;
+                    occurrenceTracker.save(data);
+                }
+            }
+        };
+
+        // Función para parsear CSV mejorada
+        const parseCSV = (text) => {
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (lines.length < 2) throw new Error('CSV vacío o sin cabeceras.');
+            
+            const questions = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                try {
+                    // Usar expresión regular para parsear CSV con comillas
+                    const csvRegex = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
+                    const fields = line.split(csvRegex);
+                    
+                    if (fields.length < 6) continue;
+                    
+                    // Limpiar campos de comillas
+                    const cleanField = (field) => {
+                        if (!field) return '';
+                        return field.replace(/^"/, '').replace(/"$/, '').replace(/""/g, '"').trim();
+                    };
+                    
+                    const question = {
+                        ID: cleanField(fields[0]),
+                        Category: cleanField(fields[1]),
+                        Question: cleanField(fields[2]),
+                        Answer: cleanField(fields[3]),
+                        Reasoning: cleanField(fields[4]),
+                        Legal_Reference: cleanField(fields[5])
+                    };
+                    
+                    // Validar que los campos esenciales no estén vacíos
+                    if (question.ID && question.Category && question.Question && question.Answer) {
+                        questions.push(question);
+                    }
+                } catch (parseError) {
+                    console.warn(`Error parsing line ${i}: ${parseError.message}`);
+                    continue;
+                }
+            }
+            
+            return questions;
+        };
+
+        // Función para cargar CSV desde GitHub
+        const loadCSVFromGitHub = async () => {
+            try {
+                const response = await fetch(CSV_URL);
+                if (!response.ok) {
+                    throw new Error(`Error al cargar el archivo: ${response.status} ${response.statusText}`);
+                }
+                
+                const text = await response.text();
+                allQuestions = parseCSV(text);
+                
+                if (allQuestions.length === 0) {
+                    throw new Error("No se pudieron procesar las preguntas. Revisa el formato del CSV.");
+                }
+
+                occurrenceTracker.init(allQuestions);
+                
+                // Ocultar loading y mostrar configuración
+                loadingSection.classList.add('hidden');
+                configSection.classList.remove('hidden');
+                
+                // Mostrar información de éxito
+                infoBox.textContent = `¡Éxito! Se han cargado ${allQuestions.length} preguntas de derecho administrativo.`;
+                infoBox.classList.remove('hidden');
+                
+                // Configurar input de número de preguntas
+                numQuestionsInput.max = allQuestions.length;
+                numQuestionsInput.value = Math.min(10, allQuestions.length); // Valor por defecto
+                numQuestionsInput.disabled = false;
+                startButton.disabled = false;
+
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                loadingSection.classList.add('hidden');
+                errorBox.textContent = `Error al cargar las preguntas: ${error.message}`;
+                errorBox.classList.remove('hidden');
+            }
+        };
+
+        const formatLegalReferenceText = (questionData) => {
+            const lawMapping = {
+                'BOE-A-2015-10565': 'Ley 39/2015',
+                'BOE-A-2015-10566': 'Ley 40/2015',
+                'BOE-A-1978-31229': 'CE',
+                'BOE-A-2017-12902': 'LCSP',
+                'BOE-A-2003-23186': 'LPAP',
+                'BOE-A-2013-12887': 'Ley 19/2013',
+                'BOE-A-1889-4763': 'Código Civil',
+                'BOE-A-2007-6115': 'Ley de Igualdad',
+                'BOE-A-1954-6364': 'LEF',
+                'BOE-A-2007-7788': 'EBEP'
+            };
+
+            const url = questionData.Legal_Reference;
+            if (!url) return "Sin referencia";
+            
+            let lawText = '';
+            let articleText = '';
+
+            const boeMatch = url.match(/id=(BOE-A-\d{4}-\d+)/);
+            if (boeMatch && lawMapping[boeMatch[1]]) {
+                lawText = lawMapping[boeMatch[1]];
+            }
+
+            const articleMatch = url.match(/#a(\d+)/);
+            if (articleMatch) {
+                articleText = `, art. ${articleMatch[1]}`;
+            }
+
+            return lawText ? `${lawText}${articleText}` : "Ver disposición";
+        };
+
+        const startGame = () => {
+            const num = parseInt(numQuestionsInput.value);
+            if (isNaN(num) || num <= 0 || num > allQuestions.length) {
+                errorBox.textContent = `Introduce un número válido entre 1 y ${allQuestions.length}.`;
+                errorBox.classList.remove('hidden');
+                return;
+            }
+            
+            // Resetear estado
+            correctAnswers = [];
+            incorrectAnswers = [];
+            currentQuestionIndex = 0;
+            
+            // Seleccionar preguntas aleatorias
+            const indices = new Set();
+            while (indices.size < num) {
+                indices.add(Math.floor(Math.random() * allQuestions.length));
+            }
+            quizQuestions = Array.from(indices).map(i => allQuestions[i]);
+            
+            // Cambiar pantalla
+            setupScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            displayQuestion();
+        };
+
+        const displayQuestion = () => {
+            if (currentQuestionIndex >= quizQuestions.length) {
+                showResults();
+                return;
+            }
+            
+            const q = quizQuestions[currentQuestionIndex];
+            occurrenceTracker.increment(q.ID);
+            
+            // Mostrar pregunta
+            category.textContent = q.Category;
+            questionText.textContent = q.Question;
+            
+            // Formatear respuesta
+            let formattedAnswer = q.Answer
+                .replace(/Palabras clave:/g, '<br><br><strong>Palabras clave:</strong>')
+                .replace(/Analogía:/g, '<br><br><strong>Analogía:</strong>');
+            correctAnswerText.innerHTML = formattedAnswer;
+            
+            reasoningText.textContent = q.Reasoning;
+            
+            // Referencia legal
+            if (q.Legal_Reference) {
+                legalRefLink.href = q.Legal_Reference;
+                legalRefText.textContent = formatLegalReferenceText(q);
+                legalRefLink.style.display = 'inline-block';
+            } else {
+                legalRefLink.style.display = 'none';
+            }
+
+            // Actualizar contadores
+            currentQNum.textContent = currentQuestionIndex + 1;
+            totalQNum.textContent = quizQuestions.length;
+            
+            // Resetear interfaz
+            userAnswer.value = '';
+            feedbackSection.classList.add('hidden');
+            aiResponseContainer.classList.add('hidden');
+            aiResponseContent.innerHTML = '';
+            aiEnhanceButton.classList.remove('hidden');
+            verifyButton.classList.remove('hidden');
+            nextButton.classList.add('hidden');
+            evalButtons.classList.remove('hidden');
+        };
+        
+        const showFeedback = () => {
+            verifyButton.classList.add('hidden');
+            feedbackSection.classList.remove('hidden');
+            feedbackMessage.classList.add('hidden');
+        };
+
+        const handleEvaluation = (isCorrect) => {
+            evalButtons.classList.add('hidden');
+            nextButton.classList.remove('hidden');
+            
+            if (isCorrect) {
+                correctAnswers.push(quizQuestions[currentQuestionIndex]);
+                feedbackMessage.textContent = '¡Excelente! Respuesta correcta. 🎉';
+                feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-correct';
+            } else {
+                incorrectAnswers.push(quizQuestions[currentQuestionIndex]);
+                feedbackMessage.textContent = '¡Ánimo! Lo importante es aprender de los errores. 💪';
+                feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-incorrect';
+            }
+            feedbackMessage.classList.remove('hidden');
+        };
+        
+        const getAIEnhancement = async () => {
+            const q = quizQuestions[currentQuestionIndex];
+            aiEnhanceButton.classList.add('hidden');
+            aiResponseContainer.classList.remove('hidden');
+            aiSpinner.classList.remove('hidden');
+            aiResponseContent.innerHTML = '';
+
+            // Simulación de respuesta IA (reemplazar con API real)
+            try {
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Simular delay
+                
+                const mockResponse = `
+                    <h5 class="font-bold text-violet-300 mb-2">💡 Explicación Adicional:</h5>
+                    <p class="text-slate-300 mb-3">
+                        Esta pregunta se centra en <strong>${q.Category}</strong>. 
+                        El concepto clave aquí es entender que ${q.Answer.split('.')[0].toLowerCase()}.
+                    </p>
+                    <p class="text-slate-300 mb-3">
+                        <strong>Consejo para recordar:</strong> Piensa en esta regla como una protección 
+                        que garantiza la seguridad jurídica y los derechos de los ciudadanos.
+                    </p>
+                    <p class="text-slate-300">
+                        <strong>Ejemplo práctico:</strong> Un caso típico sería cuando una administración 
+                        necesita aplicar este principio en la gestión cotidiana.
+                    </p>
+                `;
+                
+                aiResponseContent.innerHTML = mockResponse;
+                
+                // Para implementar la API real de Google Gemini, descomenta y configura:
+                /*
+                const prompt = `Eres un tutor experto en derecho administrativo español. La siguiente es una pregunta de oposiciones. Proporciona una explicación mejorada, clara y concisa para un opositor. Puedes añadir ejemplos prácticos si ayuda a la comprensión. Mantén un tono motivador y de apoyo.
+
+                Pregunta: "${q.Question}"
+                Respuesta Correcta: "${q.Answer}"
+                Justificación Original: "${q.Reasoning}"
+
+                Tu explicación mejorada:`;
+
+                const apiKey = "TU_API_KEY_AQUI"; // Reemplazar con tu API key
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ role: "user", parts: [{ text: prompt }] }]
+                    })
+                });
+                
+                const result = await response.json();
+                // Procesar respuesta...
+                */
+                
+            } catch (error) {
+                aiResponseContent.innerHTML = `<p class="text-red-400">Error al contactar con la IA: ${error.message}</p>`;
+            } finally {
+                aiSpinner.classList.add('hidden');
+            }
+        };
+
+        const showResults = () => {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            correctCount.textContent = correctAnswers.length;
+            incorrectCount.textContent = incorrectAnswers.length;
+            
+            const percentage = quizQuestions.length > 0 ? (correctAnswers.length / quizQuestions.length) * 100 : 0;
+            
+            if (percentage >= 80) {
+                finalMessage.textContent = "¡Magnífico trabajo! Tu esfuerzo está dando frutos. Sigue así.";
+            } else if (percentage >= 50) {
+                finalMessage.textContent = "¡Buen progreso! Estás construyendo una base sólida. ¡A por la siguiente!";
+            } else {
+                finalMessage.textContent = "Cada error es un paso más hacia el éxito. ¡No te rindas, la constancia es la clave!";
+            }
+            
+            // Sección de repaso
+            if (incorrectAnswers.length > 0) {
+                reviewList.innerHTML = incorrectAnswers.map((q, i) => 
+                    `<div class="p-3 bg-slate-900 rounded-lg">
+                        <p class="font-semibold text-slate-300">${i + 1}. ${q.Question}</p>
+                        <p class="mt-1 text-green-400"><strong>R:</strong> ${q.Answer}</p>
+                    </div>`
+                ).join('');
+                reviewSection.classList.remove('hidden');
+            } else {
+                reviewSection.classList.add('hidden');
+            }
+            
+            // Tabla de estadísticas
+            const occurrenceData = occurrenceTracker.get();
+            occurrenceTableBody.innerHTML = allQuestions.map(q => 
+                `<tr>
+                    <td class="p-2">${q.Question.substring(0, 70)}...</td>
+                    <td class="p-2 w-28 text-center font-bold">${occurrenceData[q.ID] || 0}</td>
+                </tr>`
+            ).join('');
+        };
+        
+        const restartApp = () => {
+            resultsScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+            
+            // Mostrar configuración directamente (el CSV ya está cargado)
+            loadingSection.classList.add('hidden');
+            configSection.classList.remove('hidden');
+            
+            // Resetear inputs
+            numQuestionsInput.value = Math.min(10, allQuestions.length);
+            
+            // Ocultar mensajes de error
+            errorBox.classList.add('hidden');
+            
+            // Resetear datos
+            quizQuestions = [];
+            correctAnswers = [];
+            incorrectAnswers = [];
+            currentQuestionIndex = 0;
+        };
+
+        // --- EVENT LISTENERS ---
+        startButton.addEventListener('click', startGame);
+        verifyButton.addEventListener('click', showFeedback);
+        aiEnhanceButton.addEventListener('click', getAIEnhancement);
+        correctBtn.addEventListener('click', () => handleEvaluation(true));
+        incorrectBtn.addEventListener('click', () => handleEvaluation(false));
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            displayQuestion();
+        });
+        restartButton.addEventListener('click', restartApp);
+
+        // Reconocimiento de voz
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.interimResults = false;
+            
+            micButton.addEventListener('click', () => {
+                try {
+                    micStatus.textContent = '🎙️ Escuchando...';
+                    recognition.start();
+                } catch(e) {
+                    micStatus.textContent = 'El micrófono ya está activo.';
+                }
+            });
+            
+            recognition.onresult = (event) => {
+                userAnswer.value = event.results[0][0].transcript;
+                micStatus.textContent = 'Respuesta capturada ✓';
+                setTimeout(() => { micStatus.textContent = ''; }, 2000);
+            };
+            
+            recognition.onerror = (event) => {
+                micStatus.textContent = `Error: ${event.error}`;
+                setTimeout(() => { micStatus.textContent = ''; }, 3000);
+            };
+            
+            recognition.onend = () => {
+                if (micStatus.textContent === '🎙️ Escuchando...') {
+                    micStatus.textContent = '';
+                }
+            };
+        } else {
+            micButton.style.display = 'none';
+        }
+
+        // --- INICIAR APLICACIÓN ---
+        // Cargar CSV automáticamente al iniciar
+        loadCSVFromGitHub();
+    });
+    </script>
+</body>
+</html>
