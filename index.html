@@ -441,6 +441,15 @@
             color: #ddd;
             font-size: 1.1rem;
         }
+
+        .debug-info {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -461,6 +470,7 @@
         <div class="error-panel" id="errorPanel" style="display: none;">
             <h2>Error al cargar las preguntas</h2>
             <p id="errorMessage">Ha ocurrido un problema al cargar el archivo CSV.</p>
+            <div class="debug-info" id="debugInfo" style="display: none;"></div>
             <button onclick="location.reload()">Reintentar</button>
         </div>
 
@@ -561,6 +571,7 @@
         const loadingPanel = document.getElementById('loadingPanel');
         const errorPanel = document.getElementById('errorPanel');
         const errorMessage = document.getElementById('errorMessage');
+        const debugInfo = document.getElementById('debugInfo');
         const configPanel = document.getElementById('configPanel');
         const categorySelect = document.getElementById('category');
         const quizContainer = document.getElementById('quizContainer');
@@ -590,84 +601,110 @@
         const nextBtn = document.getElementById('nextBtn');
         const restartBtn = document.getElementById('restartBtn');
 
-        // Función especial para parsear el CSV con formato complejo
-        function parseComplexCSVLine(line) {
-            // Manejo especial para el formato de tu CSV
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            let quoteCount = 0;
+        // Parser específico para el formato de tu CSV
+        function parseSpecificCSVFormat(csvText) {
+            const questions = [];
+            const lines = csvText.split('\n');
             
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                const nextChar = line[i + 1];
+            console.log('📄 Total de líneas en CSV:', lines.length);
+            
+            // Saltar la primera línea (header)
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
                 
-                if (char === '"') {
-                    if (nextChar === '"') {
-                        // Doble comilla -> una comilla literal
-                        current += '"';
-                        i++; // Skip next quote
+                try {
+                    console.log(`🔍 Procesando línea ${i}:`, line.substring(0, 100) + '...');
+                    
+                    // Tu CSV tiene el formato: "ID,Category,"Question","Answer","Reasoning","Legal_Reference"
+                    // Necesitamos extraer cada campo considerando las comillas especiales
+                    
+                    const match = line.match(/^"(\d+),(.*?),""(.*?)"",""(.*?)"",""(.*?)"",""(.*?)""$/);
+                    
+                    if (match) {
+                        const [, id, category, question, answer, reasoning, legalRef] = match;
+                        
+                        // Limpiar las comillas dobles escapadas
+                        const cleanQuestion = question.replace(/""/g, '"');
+                        const cleanAnswer = answer.replace(/""/g, '"');
+                        const cleanReasoning = reasoning.replace(/""/g, '"');
+                        const cleanLegalRef = legalRef.replace(/""/g, '"');
+                        
+                        // Extraer recordatorios y palabras clave
+                        const { cleanText, reminder, keywords } = extractDataFromText(cleanAnswer);
+                        
+                        const questionObj = {
+                            ID: parseInt(id),
+                            Category: category,
+                            Question: cleanQuestion,
+                            Answer: cleanText,
+                            Reasoning: cleanReasoning,
+                            Legal_Reference: cleanLegalRef,
+                            Reminder: reminder,
+                            Keywords: keywords
+                        };
+                        
+                        questions.push(questionObj);
+                        availableCategories.add(category);
+                        
+                        console.log(`✅ Pregunta ${id} procesada exitosamente`);
+                        
                     } else {
-                        // Cambiar estado de comillas
-                        inQuotes = !inQuotes;
+                        console.warn(`⚠️ Línea ${i} no coincide con el formato esperado`);
                     }
-                } else if (char === ',' && !inQuotes) {
-                    // Separador de campo
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
+                    
+                } catch (error) {
+                    console.error(`❌ Error procesando línea ${i}:`, error);
                 }
             }
             
-            // Añadir último campo
-            result.push(current.trim());
-            
-            // Limpiar comillas extra al inicio y final
-            return result.map(field => {
-                if (field.startsWith('"') && field.endsWith('"')) {
-                    return field.slice(1, -1);
-                }
-                return field;
-            });
+            return questions;
         }
 
-        // Función para extraer datos de un texto complejo
-        function extractFromComplexText(text) {
-            if (!text) return { clean: '', reminder: '', keywords: [] };
+        // Función para extraer recordatorios y palabras clave del texto
+        function extractDataFromText(text) {
+            if (!text) return { cleanText: '', reminder: '', keywords: [] };
             
-            // Buscar recordatorio
+            let cleanText = text;
             let reminder = '';
-            const reminderMatch = text.match(/Recuerda:\s*([^.]+\.?)/i) || 
-                                text.match(/Mnemotecnia:\s*([^.]+\.?)/i) ||
-                                text.match(/Analogía:\s*([^.]+\.?)/i);
-            if (reminderMatch) {
-                reminder = reminderMatch[1].trim();
+            let keywords = [];
+            
+            // Buscar recordatorios
+            const reminderPatterns = [
+                /Recuerda:\s*([^.]+\.?)/i,
+                /Mnemotecnia:\s*([^.]+\.?)/i,
+                /Analogía:\s*([^.]+\.?)/i
+            ];
+            
+            for (const pattern of reminderPatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    reminder = match[1].trim();
+                    cleanText = cleanText.replace(pattern, '').trim();
+                    break;
+                }
             }
             
             // Buscar palabras clave
-            let keywords = [];
-            const keywordsMatch = text.match(/Palabras clave:\s*([^.]+)/i);
-            if (keywordsMatch) {
-                keywords = keywordsMatch[1].split(',').map(k => k.trim()).filter(k => k.length > 0);
+            const keywordMatch = text.match(/Palabras clave:\s*([^.]+)/i);
+            if (keywordMatch) {
+                keywords = keywordMatch[1].split(',').map(k => k.trim()).filter(k => k.length > 0);
+                cleanText = cleanText.replace(/Palabras clave:\s*[^.]+\.?/i, '').trim();
             }
             
-            // Limpiar texto principal
-            let cleanText = text
-                .replace(/Recuerda:\s*[^.]+\.?/gi, '')
-                .replace(/Mnemotecnia:\s*[^.]+\.?/gi, '')
-                .replace(/Analogía:\s*[^.]+\.?/gi, '')
+            // Limpiar otros patrones
+            cleanText = cleanText
                 .replace(/Ejemplo:\s*[^.]+\.?/gi, '')
-                .replace(/Palabras clave:\s*[^.]+\.?/gi, '')
                 .trim();
             
-            return { clean: cleanText, reminder, keywords };
+            return { cleanText, reminder, keywords };
         }
 
         // Función para cargar y parsear el CSV
         async function loadQuestionsFromCSV() {
             try {
-                console.log('Cargando CSV...');
+                console.log('🚀 Iniciando carga del CSV...');
+                
                 const response = await fetch('FC_ADMINISTRATIVO_BEST.csv');
                 
                 if (!response.ok) {
@@ -675,46 +712,16 @@
                 }
                 
                 const csvText = await response.text();
-                console.log('CSV cargado, iniciando parsing...');
+                console.log('📊 CSV cargado, tamaño:', csvText.length, 'caracteres');
                 
-                // Dividir en líneas
-                const lines = csvText.split('\n').filter(line => line.trim() !== '');
-                console.log('Líneas encontradas:', lines.length);
+                // Mostrar una muestra del CSV en debug
+                const sample = csvText.substring(0, 500);
+                console.log('📋 Muestra del CSV:', sample);
                 
-                // Saltar la cabecera y procesar líneas
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    try {
-                        const values = parseComplexCSVLine(line);
-                        
-                        if (values.length >= 6) {
-                            // Extraer datos complejos de la respuesta
-                            const answerData = extractFromComplexText(values[3]);
-                            
-                            const question = {
-                                ID: parseInt(values[0]) || i,
-                                Category: values[1] || 'Sin categoría',
-                                Question: values[2] || '',
-                                Answer: answerData.clean,
-                                Reasoning: values[4] || '',
-                                Legal_Reference: values[5] || '',
-                                Reminder: answerData.reminder,
-                                Keywords: answerData.keywords
-                            };
-                            
-                            questionsData.push(question);
-                            availableCategories.add(question.Category);
-                            
-                            console.log(`Pregunta ${question.ID} procesada: ${question.Question.substring(0, 50)}...`);
-                        }
-                    } catch (lineError) {
-                        console.warn(`Error procesando línea ${i}:`, lineError);
-                    }
-                }
+                // Usar el parser específico
+                questionsData = parseSpecificCSVFormat(csvText);
                 
-                console.log(`✅ Total preguntas cargadas: ${questionsData.length}`);
+                console.log(`✅ Total preguntas procesadas: ${questionsData.length}`);
                 console.log('📁 Categorías encontradas:', Array.from(availableCategories));
                 
                 if (questionsData.length === 0) {
@@ -729,7 +736,12 @@
                 
             } catch (error) {
                 console.error('❌ Error al cargar CSV:', error);
-                showError(`Error al cargar las preguntas: ${error.message}`);
+                showError(`Error al cargar las preguntas: ${error.message}`, {
+                    totalLines: 0,
+                    questionsFound: questionsData.length,
+                    categories: Array.from(availableCategories),
+                    error: error.toString()
+                });
             }
         }
 
@@ -748,11 +760,23 @@
             });
         }
 
-        // Función para mostrar error
-        function showError(message) {
+        // Función para mostrar error con debug
+        function showError(message, debugData = null) {
             loadingPanel.style.display = 'none';
             configPanel.style.display = 'none';
             errorMessage.textContent = message;
+            
+            if (debugData) {
+                debugInfo.innerHTML = `
+                    <strong>Información de debug:</strong><br>
+                    Líneas totales: ${debugData.totalLines}<br>
+                    Preguntas encontradas: ${debugData.questionsFound}<br>
+                    Categorías: ${debugData.categories.join(', ')}<br>
+                    Error: ${debugData.error}
+                `;
+                debugInfo.style.display = 'block';
+            }
+            
             errorPanel.style.display = 'block';
         }
 
