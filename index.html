@@ -536,7 +536,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Pregunta</th>
-                        <th>Veces mostrada (sesión actual)</th>
+                        <th>Veces mostrada</th>
                     </tr>
                 </thead>
                 <tbody id="statisticsBody"></tbody>
@@ -590,85 +590,78 @@
         const nextBtn = document.getElementById('nextBtn');
         const restartBtn = document.getElementById('restartBtn');
 
-        // Función para parsear líneas CSV con comillas
-        function parseCSVLine(line) {
+        // Función especial para parsear el CSV con formato complejo
+        function parseComplexCSVLine(line) {
+            // Manejo especial para el formato de tu CSV
             const result = [];
             let current = '';
             let inQuotes = false;
-            let i = 0;
-
-            while (i < line.length) {
+            let quoteCount = 0;
+            
+            for (let i = 0; i < line.length; i++) {
                 const char = line[i];
-
+                const nextChar = line[i + 1];
+                
                 if (char === '"') {
-                    if (inQuotes && line[i + 1] === '"') {
-                        // Comilla doble escapada
+                    if (nextChar === '"') {
+                        // Doble comilla -> una comilla literal
                         current += '"';
-                        i += 2;
+                        i++; // Skip next quote
                     } else {
-                        // Cambiar estado de las comillas
+                        // Cambiar estado de comillas
                         inQuotes = !inQuotes;
-                        i++;
                     }
                 } else if (char === ',' && !inQuotes) {
                     // Separador de campo
                     result.push(current.trim());
                     current = '';
-                    i++;
                 } else {
                     current += char;
-                    i++;
                 }
             }
-
-            // Añadir el último campo
+            
+            // Añadir último campo
             result.push(current.trim());
-            return result;
-        }
-
-        // Función para extraer recordatorios del texto
-        function extractReminder(text) {
-            if (!text) return '';
             
-            const reminderPatterns = [
-                /Recuerda:\s*([^.]+(?:\.[^.]*)?)/i,
-                /Mnemotecnia:\s*([^.]+(?:\.[^.]*)?)/i,
-                /Ejemplo:\s*([^.]+(?:\.[^.]*)?)/i
-            ];
-
-            for (const pattern of reminderPatterns) {
-                const match = text.match(pattern);
-                if (match) {
-                    return match[1].trim();
+            // Limpiar comillas extra al inicio y final
+            return result.map(field => {
+                if (field.startsWith('"') && field.endsWith('"')) {
+                    return field.slice(1, -1);
                 }
-            }
-
-            return '';
+                return field;
+            });
         }
 
-        // Función para extraer palabras clave del texto
-        function extractKeywords(text) {
-            if (!text) return [];
+        // Función para extraer datos de un texto complejo
+        function extractFromComplexText(text) {
+            if (!text) return { clean: '', reminder: '', keywords: [] };
             
-            const keywordMatch = text.match(/Palabras clave:\s*([^.]+)/i);
-            if (keywordMatch) {
-                return keywordMatch[1].split(',').map(k => k.trim()).filter(k => k.length > 0);
+            // Buscar recordatorio
+            let reminder = '';
+            const reminderMatch = text.match(/Recuerda:\s*([^.]+\.?)/i) || 
+                                text.match(/Mnemotecnia:\s*([^.]+\.?)/i) ||
+                                text.match(/Analogía:\s*([^.]+\.?)/i);
+            if (reminderMatch) {
+                reminder = reminderMatch[1].trim();
             }
             
-            return [];
-        }
-
-        // Función para limpiar el texto de la respuesta
-        function cleanAnswerText(text) {
-            if (!text) return '';
+            // Buscar palabras clave
+            let keywords = [];
+            const keywordsMatch = text.match(/Palabras clave:\s*([^.]+)/i);
+            if (keywordsMatch) {
+                keywords = keywordsMatch[1].split(',').map(k => k.trim()).filter(k => k.length > 0);
+            }
             
-            // Eliminar las partes adicionales (Recuerda, Ejemplo, Palabras clave, etc.)
-            return text
-                .replace(/Recuerda:.*$/i, '')
-                .replace(/Mnemotecnia:.*$/i, '')
-                .replace(/Ejemplo:.*$/i, '')
-                .replace(/Palabras clave:.*$/i, '')
+            // Limpiar texto principal
+            let cleanText = text
+                .replace(/Recuerda:\s*[^.]+\.?/gi, '')
+                .replace(/Mnemotecnia:\s*[^.]+\.?/gi, '')
+                .replace(/Analogía:\s*[^.]+\.?/gi, '')
+                .replace(/Ejemplo:\s*[^.]+\.?/gi, '')
+                .replace(/Palabras clave:\s*[^.]+\.?/gi, '')
                 .trim();
+            
+            return { clean: cleanText, reminder, keywords };
         }
 
         // Función para cargar y parsear el CSV
@@ -682,47 +675,47 @@
                 }
                 
                 const csvText = await response.text();
-                console.log('CSV cargado, tamaño:', csvText.length);
+                console.log('CSV cargado, iniciando parsing...');
                 
                 // Dividir en líneas
                 const lines = csvText.split('\n').filter(line => line.trim() !== '');
                 console.log('Líneas encontradas:', lines.length);
                 
-                // Saltar la cabecera
+                // Saltar la cabecera y procesar líneas
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
                     
                     try {
-                        const values = parseCSVLine(line);
+                        const values = parseComplexCSVLine(line);
                         
                         if (values.length >= 6) {
-                            const rawAnswer = values[3] || '';
-                            const cleanAnswer = cleanAnswerText(rawAnswer);
-                            const reminder = extractReminder(rawAnswer);
-                            const keywords = extractKeywords(rawAnswer);
+                            // Extraer datos complejos de la respuesta
+                            const answerData = extractFromComplexText(values[3]);
                             
                             const question = {
                                 ID: parseInt(values[0]) || i,
                                 Category: values[1] || 'Sin categoría',
                                 Question: values[2] || '',
-                                Answer: cleanAnswer,
+                                Answer: answerData.clean,
                                 Reasoning: values[4] || '',
                                 Legal_Reference: values[5] || '',
-                                Reminder: reminder,
-                                Keywords: keywords
+                                Reminder: answerData.reminder,
+                                Keywords: answerData.keywords
                             };
                             
                             questionsData.push(question);
                             availableCategories.add(question.Category);
+                            
+                            console.log(`Pregunta ${question.ID} procesada: ${question.Question.substring(0, 50)}...`);
                         }
                     } catch (lineError) {
                         console.warn(`Error procesando línea ${i}:`, lineError);
                     }
                 }
                 
-                console.log(`Preguntas cargadas: ${questionsData.length}`);
-                console.log('Categorías encontradas:', Array.from(availableCategories));
+                console.log(`✅ Total preguntas cargadas: ${questionsData.length}`);
+                console.log('📁 Categorías encontradas:', Array.from(availableCategories));
                 
                 if (questionsData.length === 0) {
                     throw new Error('No se encontraron preguntas válidas en el archivo CSV');
@@ -735,7 +728,7 @@
                 showConfigPanel();
                 
             } catch (error) {
-                console.error('Error al cargar CSV:', error);
+                console.error('❌ Error al cargar CSV:', error);
                 showError(`Error al cargar las preguntas: ${error.message}`);
             }
         }
@@ -789,7 +782,7 @@
         }
 
         function selectQuestionsByRandomIds(numQuestions, category) {
-            console.log('Seleccionando preguntas. Número:', numQuestions, 'Categoría:', category);
+            console.log('🎲 Seleccionando preguntas:', numQuestions, 'Categoría:', category);
             
             let availableQuestions = questionsData;
             
@@ -797,38 +790,15 @@
                 availableQuestions = questionsData.filter(q => q.Category === category);
             }
             
-            console.log('Preguntas disponibles:', availableQuestions.length);
+            console.log('📊 Preguntas disponibles:', availableQuestions.length);
             
             const numToSelect = Math.min(numQuestions, availableQuestions.length);
-            const availableIds = availableQuestions.map(q => q.ID);
-            const randomIds = getRandomNumbers(numToSelect, 0, availableIds.length - 1);
-            const selectedIds = randomIds.map(index => availableIds[index]);
+            const randomIndices = getRandomNumbers(numToSelect, 0, availableQuestions.length - 1);
             
-            console.log('IDs seleccionados:', selectedIds);
+            const selectedQuestions = randomIndices.map(index => availableQuestions[index]);
             
-            const selectedQuestions = [];
-            for (const id of selectedIds) {
-                const question = availableQuestions.find(q => q.ID === id);
-                if (question) {
-                    selectedQuestions.push(question);
-                }
-            }
-            
-            console.log('Preguntas seleccionadas:', selectedQuestions.length);
+            console.log('✅ Preguntas seleccionadas:', selectedQuestions.length);
             return selectedQuestions;
-        }
-
-        // Función para generar enlace legal
-        function generateLegalLink(reference) {
-            if (!reference) return null;
-            
-            // Si ya contiene un enlace directo, usarlo
-            if (reference.includes('https://')) {
-                const linkMatch = reference.match(/https:\/\/[^\s"]+/);
-                return linkMatch ? linkMatch[0] : null;
-            }
-            
-            return null;
         }
 
         // Función para generar opciones incorrectas
@@ -843,7 +813,7 @@
                     incorrectOptions.push(correctAnswer.replace(/^Falso\./i, "Verdadero."));
                 }
                 incorrectOptions.push("Depende del contexto y la normativa aplicable");
-                incorrectOptions.push("Solo es verdadero en casos excepcionales previstos en la ley");
+                incorrectOptions.push("Solo es verdadero en casos excepcionales");
             } else {
                 // Modificaciones semánticas para otras preguntas
                 const modificaciones = [
@@ -852,8 +822,8 @@
                     { original: /obligatorio/g, reemplazo: "voluntario" },
                     { original: /siempre/g, reemplazo: "nunca" },
                     { original: /Gobierno/g, reemplazo: "Parlamento" },
-                    { original: /un mes/g, reemplazo: "tres meses" },
-                    { original: /30 días/g, reemplazo: "60 días" }
+                    { original: /un mes/g, reemplazo: "dos meses" },
+                    { original: /30 días/g, reemplazo: "45 días" }
                 ];
                 
                 for (const mod of modificaciones) {
@@ -870,8 +840,8 @@
                         "Solo es aplicable en casos excepcionales"
                     ];
                     
-                    const opcion = opcionesGenericas[incorrectOptions.length];
-                    if (opcion && !incorrectOptions.includes(opcion)) {
+                    const opcion = opcionesGenericas[incorrectOptions.length % opcionesGenericas.length];
+                    if (!incorrectOptions.includes(opcion)) {
                         incorrectOptions.push(opcion);
                     } else {
                         break;
@@ -972,15 +942,7 @@
             
             // Referencia legal
             if (question.Legal_Reference) {
-                const legalLink = generateLegalLink(question.Legal_Reference);
-                if (legalLink) {
-                    legalReferenceContainer.innerHTML = `
-                        <strong>Referencia legal:</strong> 
-                        <a href="${legalLink}" target="_blank">${question.Legal_Reference}</a>
-                    `;
-                } else {
-                    legalReferenceContainer.innerHTML = `<strong>Referencia legal:</strong> ${question.Legal_Reference}`;
-                }
+                legalReferenceContainer.innerHTML = `<strong>Referencia legal:</strong> <a href="${question.Legal_Reference}" target="_blank">${question.Legal_Reference}</a>`;
             }
             
             // Mostrar recordatorios y palabras clave
@@ -1082,7 +1044,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${id}</td>
-                    <td>${sessionStats[id].question}</td>
+                    <td>${sessionStats[id].question.substring(0, 60)}...</td>
                     <td>${sessionStats[id].timesShown}</td>
                 `;
                 statisticsBody.appendChild(row);
@@ -1100,6 +1062,12 @@
             }
             
             currentQuestions = selectQuestionsByRandomIds(numCards, category);
+            
+            if (currentQuestions.length === 0) {
+                alert('No se encontraron preguntas para la categoría seleccionada.');
+                return;
+            }
+            
             currentQuestionIndex = 0;
             score = 0;
             incorrectAnswers = [];
@@ -1127,6 +1095,7 @@
 
         // Cargar preguntas al iniciar
         window.addEventListener('load', () => {
+            console.log('🚀 Iniciando aplicación FlashCards...');
             loadQuestionsFromCSV();
         });
     </script>
