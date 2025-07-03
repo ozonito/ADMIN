@@ -3,1125 +3,586 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlashCards Quiz - Derecho Administrativo</title>
+    <title>Flashcards de Oposiciones - Estudio con IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2980b9;
-            --text-color: #f4f4f4;
-            --background-color: #121212;
-            --card-color: #1e1e1e;
-            --correct-color: #27ae60;
-            --incorrect-color: #e74c3c;
-            --hover-color: #34495e;
-            --reminder-color: #f39c12;
-            --keyword-color: #9b59b6;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
         }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+        .card {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
         }
-
-        header {
-            text-align: center;
-            padding: 20px 0;
-            margin-bottom: 30px;
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
         }
-
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            color: var(--primary-color);
+        .btn-primary:hover {
+            background-color: #2b6cb0;
         }
-
-        header p {
-            font-size: 1.2rem;
-            color: var(--text-color);
-            opacity: 0.8;
-        }
-
-        .loading-panel {
-            background-color: var(--card-color);
-            border-radius: 10px;
-            padding: 40px 20px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .loading-panel h2 {
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            margin: 20px auto;
-            border: 4px solid #333;
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error-panel {
-            background-color: rgba(231, 76, 60, 0.2);
-            border: 1px solid var(--incorrect-color);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .config-panel {
-            background-color: var(--card-color);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            display: none;
-        }
-
-        .config-panel h2 {
-            margin-bottom: 15px;
-            color: var(--primary-color);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .form-group select {
-            width: 100%;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            background-color: #333;
-            color: var(--text-color);
-            font-size: 1rem;
-        }
-
-        button {
-            background-color: var(--primary-color);
-            color: var(--text-color);
-            border: none;
-            padding: 12px 25px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s ease;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: var(--secondary-color);
-        }
-
-        button:disabled {
-            background-color: #555;
+        .btn-primary:disabled {
+            background-color: #4a5568;
             cursor: not-allowed;
         }
-
-        .quiz-container {
-            display: none;
-            background-color: var(--card-color);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .btn-secondary {
+            background-color: #4a5568;
         }
-
-        .quiz-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+        .btn-secondary:hover {
+            background-color: #2d3748;
         }
-
-        .quiz-progress {
-            font-size: 1.1rem;
-        }
-
-        .flashcard {
-            background-color: var(--card-color);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .question {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-
-        .options {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-
-        .option {
-            background-color: #2c2c2c;
-            padding: 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: normal;
-            text-align: left;
-        }
-
-        .option:hover:not(.selected):not(.correct):not(.incorrect) {
-            background-color: var(--hover-color);
-            transform: translateX(5px);
-        }
-
-        .option.selected {
-            background-color: var(--secondary-color);
-            font-weight: bold;
-        }
-
-        .option.correct {
-            background-color: var(--correct-color);
-            animation: pulse 0.5s;
-        }
-
-        .option.incorrect {
-            background-color: var(--incorrect-color);
-            animation: shake 0.5s;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .feedback.correct {
-            background-color: rgba(39, 174, 96, 0.2);
-            border: 1px solid var(--correct-color);
-        }
-
-        .feedback.incorrect {
-            background-color: rgba(231, 76, 60, 0.2);
-            border: 1px solid var(--incorrect-color);
-        }
-
-        .feedback h3 {
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-
-        .feedback p {
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .study-tips {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 5px;
-        }
-
-        .reminder-section {
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: rgba(243, 156, 18, 0.1);
-            border-left: 3px solid var(--reminder-color);
-            border-radius: 3px;
-        }
-
-        .reminder-section h4 {
-            color: var(--reminder-color);
-            margin-bottom: 5px;
-            font-size: 1rem;
-        }
-
-        .keyword-section {
-            padding: 10px;
-            background-color: rgba(155, 89, 182, 0.1);
-            border-left: 3px solid var(--keyword-color);
-            border-radius: 3px;
-        }
-
-        .keyword-section h4 {
-            color: var(--keyword-color);
-            margin-bottom: 5px;
-            font-size: 1rem;
-        }
-
-        .keyword-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 5px;
-        }
-
-        .keyword-tag {
-            background-color: var(--keyword-color);
+        .btn-ai {
+            background-color: #5b21b6;
             color: white;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.85rem;
         }
-
-        .result-container {
-            display: none;
-            background-color: var(--card-color);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .btn-ai:hover {
+            background-color: #4c1d95;
         }
-
-        .result-header {
-            text-align: center;
-            margin-bottom: 20px;
+        .input-dark {
+            background-color: #1a202c;
+            border-color: #4a5568;
         }
-
-        .result-header h2 {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-bottom: 10px;
+        .feedback-correct {
+            background-color: #2f855a;
+            border-left-color: #68d391;
         }
-
-        .result-stats {
-            background-color: #2c2c2c;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
+        .feedback-incorrect {
+            background-color: #c53030;
+            border-left-color: #fc8181;
         }
-
-        .result-stats p {
-            font-size: 1.1rem;
-            margin-bottom: 5px;
+        .ai-response-card {
+            background-color: rgba(76, 29, 149, 0.3);
+            border-left: 4px solid #8b5cf6;
         }
-
-        .review-list {
-            margin-top: 20px;
+        .spinner {
+            border-top-color: #a78bfa;
+            animation: spin 1s linear infinite;
         }
-
-        .review-list h3 {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: var(--primary-color);
-        }
-
-        .review-item {
-            background-color: #2c2c2c;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-
-        .review-question {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .review-answer {
-            color: var(--correct-color);
-            margin-bottom: 5px;
-        }
-
-        .restart-btn {
-            display: block;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .statistics-table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .statistics-table th, .statistics-table td {
-            border: 1px solid #444;
-            padding: 8px 12px;
-            text-align: left;
-        }
-
-        .statistics-table th {
-            background-color: #2c2c2c;
-            color: var(--primary-color);
-        }
-
-        .statistics-table tr:nth-child(even) {
-            background-color: #1a1a1a;
-        }
-
-        .legal-reference {
-            margin-top: 10px;
-            font-style: italic;
-            font-size: 0.9rem;
-            color: #888;
-        }
-
-        .legal-reference a {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .legal-reference a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            header h1 {
-                font-size: 2rem;
-            }
-            
-            .question {
-                font-size: 1.1rem;
-            }
-            
-            .option {
-                padding: 12px;
-            }
-        }
-
-        .motivational {
-            font-style: italic;
-            text-align: center;
-            margin: 20px 0;
-            color: #ddd;
-            font-size: 1.1rem;
-        }
-
-        .debug-info {
-            margin: 10px 0;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            font-size: 0.8rem;
-            font-family: monospace;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>FlashCards Quiz - Derecho Administrativo</h1>
-            <p>Pon a prueba tus conocimientos con nuestro sistema de tarjetas aleatorias</p>
-        </header>
+<body class="flex items-center justify-center min-h-screen p-4">
 
-        <!-- Panel de carga -->
-        <div class="loading-panel" id="loadingPanel">
-            <h2>Cargando preguntas...</h2>
-            <div class="loading-spinner"></div>
-            <p>Por favor, espera mientras se cargan las preguntas desde el archivo CSV.</p>
+    <div id="app-container" class="w-full max-w-3xl mx-auto">
+
+        <!-- 1. Pantalla de Configuración -->
+        <div id="setup-screen" class="card p-8 rounded-xl shadow-lg transition-opacity duration-500">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-white">Flashcards de Oposiciones con IA</h1>
+                <p class="mt-2 text-slate-400">Carga tu .csv y potencia tu estudio.</p>
+            </div>
+            
+            <div class="mt-8 space-y-6">
+                <div>
+                    <label for="csv-file-input" class="block text-sm font-medium text-slate-300">1. Sube tu archivo .csv</label>
+                    <input type="file" id="csv-file-input" accept=".csv" class="mt-1 block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-900 file:text-blue-300 hover:file:bg-blue-800 cursor-pointer">
+                </div>
+                <div>
+                    <label for="num-questions" class="block text-sm font-medium text-slate-300">2. Número de preguntas</label>
+                    <input type="number" id="num-questions" class="input-dark mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" placeholder="Ej: 10" disabled>
+                </div>
+                <div id="info-box" class="text-center text-sm text-slate-300 bg-slate-700 p-3 rounded-lg hidden"></div>
+                <div id="error-box" class="text-center text-sm text-red-300 bg-red-800 bg-opacity-50 p-3 rounded-lg hidden"></div>
+            </div>
+
+            <div class="mt-8">
+                <button id="start-button" class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-all" disabled>
+                    Empezar Cuestionario
+                </button>
+            </div>
         </div>
 
-        <!-- Panel de error -->
-        <div class="error-panel" id="errorPanel" style="display: none;">
-            <h2>Error al cargar las preguntas</h2>
-            <p id="errorMessage">Ha ocurrido un problema al cargar el archivo CSV.</p>
-            <div class="debug-info" id="debugInfo" style="display: none;"></div>
-            <button onclick="location.reload()">Reintentar</button>
-        </div>
+        <!-- 2. Pantalla del Cuestionario -->
+        <div id="quiz-screen" class="hidden card p-8 rounded-xl shadow-lg transition-opacity duration-500">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white">Pregunta <span id="current-q-num"></span> de <span id="total-q-num"></span></h2>
+                <div id="question-category" class="text-sm bg-blue-900 text-blue-300 font-semibold py-1 px-3 rounded-full"></div>
+            </div>
+            
+            <div class="bg-slate-900 p-6 rounded-lg min-h-[120px] flex items-center justify-center">
+                <p id="question-text" class="text-lg text-center font-semibold text-slate-200"></p>
+            </div>
 
-        <!-- Panel de configuración -->
-        <div class="config-panel" id="configPanel">
-            <h2>Configura tu Quiz</h2>
-            <div class="form-group">
-                <label for="numCards">Número de Flashcards:</label>
-                <select id="numCards">
-                    <option value="5" selected>5 preguntas</option>
-                    <option value="10">10 preguntas</option>
-                    <option value="15">15 preguntas</option>
-                    <option value="20">20 preguntas</option>
-                    <option value="25">25 preguntas</option>
-                </select>
+            <div class="mt-6">
+                 <div class="relative">
+                    <textarea id="user-answer" rows="3" class="input-dark w-full p-4 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribe o dicta tu respuesta..."></textarea>
+                    <button id="mic-button" class="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 hover:text-blue-400" title="Contestar por voz">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>
+                 <p id="mic-status" class="text-sm text-center mt-2 text-slate-500 h-5"></p>
             </div>
-            <div class="form-group">
-                <label for="category">Bloque Temático:</label>
-                <select id="category">
-                    <option value="TODO" selected>Todo</option>
-                </select>
-            </div>
-            <button id="startBtn">¡Comenzar Quiz!</button>
-        </div>
 
-        <!-- Contenedor del quiz -->
-        <div class="quiz-container" id="quizContainer">
-            <div class="quiz-header">
-                <div class="quiz-progress">Pregunta <span id="currentQuestion">1</span> de <span id="totalQuestions">5</span></div>
+            <div class="mt-4">
+                <button id="verify-button" class="w-full btn-secondary font-bold py-3 px-4 rounded-lg transition-all">Verificar Respuesta</button>
             </div>
-            <div class="flashcard" id="flashcard">
-                <div class="question" id="question"></div>
-                <div class="options" id="options"></div>
-                <div class="feedback" id="feedback">
-                    <h3 id="feedbackTitle"></h3>
-                    <p id="feedbackText"></p>
-                    <div id="legalReferenceContainer" class="legal-reference"></div>
-                    <div class="study-tips" id="studyTips" style="display: none;">
-                        <div class="reminder-section" id="reminderSection" style="display: none;">
-                            <h4>📌 Recordatorio importante:</h4>
-                            <p id="reminderText"></p>
-                        </div>
-                        <div class="keyword-section" id="keywordSection" style="display: none;">
-                            <h4>🔑 Palabras clave:</h4>
-                            <div class="keyword-list" id="keywordList"></div>
-                        </div>
+
+            <!-- Sección de Feedback -->
+            <div id="feedback-section" class="hidden mt-6 space-y-4">
+                <div id="feedback-message" class="p-4 text-white font-bold rounded-lg border-l-4 text-center"></div>
+                <div class="p-4 bg-slate-900 rounded-lg">
+                    <h4 class="font-bold text-slate-300">Respuesta Correcta:</h4>
+                    <p id="correct-answer-text" class="mt-1 text-slate-300"></p>
+                    <h4 class="font-bold text-slate-300 mt-3">Justificación:</h4>
+                    <p id="reasoning-text" class="mt-1 text-slate-400"></p>
+                    
+                    <div class="mt-4">
+                        <a id="legal-ref-link" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline">
+                            <span class="font-bold">🔗 Referencia legal:</span>
+                            <span id="legal-ref-text"></span>
+                        </a>
                     </div>
                 </div>
+                
+                <!-- Botón y contenedor de IA -->
+                <button id="ai-enhance-button" class="w-full btn-ai font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">Explicar con IA ✨</button>
+                <div id="ai-response-container" class="hidden p-4 rounded-lg ai-response-card">
+                    <div id="ai-spinner" class="flex items-center justify-center gap-2 text-violet-300">
+                        <div class="spinner h-5 w-5 rounded-full border-2 border-transparent"></div>
+                        Analizando...
+                    </div>
+                    <div id="ai-response-content"></div>
+                </div>
+
+                <div id="evaluation-buttons" class="grid grid-cols-2 gap-4">
+                     <button id="correct-btn" class="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-all">✅ ¡La acerté!</button>
+                     <button id="incorrect-btn" class="flex items-center justify-center gap-2 w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-all">❌ A repasar</button>
+                </div>
+                 <button id="next-question-button" class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-all hidden">Siguiente Pregunta</button>
             </div>
-            <button id="nextBtn" style="display: none;">Siguiente Pregunta</button>
         </div>
 
-        <!-- Contenedor de resultados -->
-        <div class="result-container" id="resultContainer">
-            <div class="result-header">
-                <h2>¡Quiz Completado!</h2>
-                <p>Aquí están tus resultados</p>
+        <!-- 3. Pantalla de Resultados -->
+        <div id="results-screen" class="hidden card p-8 rounded-xl shadow-lg transition-opacity duration-500">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-white">¡Sesión Finalizada!</h2>
+                <p id="final-message" class="mt-4 text-lg text-slate-300"></p>
             </div>
-            <div class="result-stats" id="resultStats">
-                <p>Aciertos: <span id="correctAnswers">0</span> de <span id="totalAnswers">0</span></p>
-                <p>Puntuación: <span id="scorePercentage">0%</span></p>
+            <div class="mt-8 p-4 bg-slate-900 rounded-lg text-center">
+                 <h3 class="text-xl font-bold text-white mb-2">Tus Resultados</h3>
+                 <div class="flex justify-center gap-8 text-2xl">
+                     <div><span class="font-bold text-green-400" id="correct-count"></span> Correctas</div>
+                     <div><span class="font-bold text-red-400" id="incorrect-count"></span> Incorrectas</div>
+                 </div>
             </div>
-            <div class="motivational" id="motivationalMessage">
-                ¡Excelente trabajo! Sigue practicando para mejorar tus conocimientos.
+            <div id="review-section" class="mt-6 hidden">
+                 <h3 class="text-xl font-bold text-white mb-4">Conceptos a Repasar</h3>
+                 <div id="review-list" class="space-y-4 max-h-60 overflow-y-auto pr-2"></div>
             </div>
-            <div class="review-list" id="reviewList" style="display: none;">
-                <h3>Preguntas para repasar:</h3>
-                <div id="reviewItems"></div>
+            <div class="mt-6">
+                 <h3 class="text-xl font-bold text-white mb-4">Estadísticas de Preguntas</h3>
+                 <div class="max-h-60 overflow-y-auto pr-2">
+                     <table class="w-full text-left text-sm">
+                         <thead class="bg-slate-700 text-slate-300">
+                             <tr><th class="p-2">Pregunta</th><th class="p-2 w-28 text-center">Formulada</th></tr>
+                         </thead>
+                         <tbody id="occurrence-table-body" class="divide-y divide-slate-700"></tbody>
+                     </table>
+                 </div>
             </div>
-            <h3>Estadísticas de preguntas mostradas:</h3>
-            <table class="statistics-table" id="statisticsTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Pregunta</th>
-                        <th>Veces mostrada</th>
-                    </tr>
-                </thead>
-                <tbody id="statisticsBody"></tbody>
-            </table>
-            <button class="restart-btn" id="restartBtn">Iniciar Nuevo Quiz</button>
+            <div class="mt-8">
+                <button id="restart-button" class="w-full btn-primary font-bold py-3 px-6 rounded-lg transition-all">Empezar de Nuevo</button>
+            </div>
         </div>
+
     </div>
 
     <script>
-        // Variables globales
-        let questionsData = [];
-        let availableCategories = new Set();
-        let sessionStats = {};
-        let currentQuestions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let selectedAnswer = null;
-        let category = "TODO";
-        let incorrectAnswers = [];
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- SELECTORES DEL DOM ---
+        const setupScreen = document.getElementById('setup-screen'),
+              quizScreen = document.getElementById('quiz-screen'),
+              resultsScreen = document.getElementById('results-screen'),
+              csvFileInput = document.getElementById('csv-file-input'),
+              numQuestionsInput = document.getElementById('num-questions'),
+              startButton = document.getElementById('start-button'),
+              errorBox = document.getElementById('error-box'),
+              infoBox = document.getElementById('info-box'),
+              category = document.getElementById('question-category'),
+              questionText = document.getElementById('question-text'),
+              userAnswer = document.getElementById('user-answer'),
+              micButton = document.getElementById('mic-button'),
+              micStatus = document.getElementById('mic-status'),
+              verifyButton = document.getElementById('verify-button'),
+              feedbackSection = document.getElementById('feedback-section'),
+              feedbackMessage = document.getElementById('feedback-message'),
+              correctAnswerText = document.getElementById('correct-answer-text'),
+              reasoningText = document.getElementById('reasoning-text'),
+              legalRefLink = document.getElementById('legal-ref-link'),
+              legalRefText = document.getElementById('legal-ref-text'),
+              aiEnhanceButton = document.getElementById('ai-enhance-button'),
+              aiResponseContainer = document.getElementById('ai-response-container'),
+              aiSpinner = document.getElementById('ai-spinner'),
+              aiResponseContent = document.getElementById('ai-response-content'),
+              evalButtons = document.getElementById('evaluation-buttons'),
+              correctBtn = document.getElementById('correct-btn'),
+              incorrectBtn = document.getElementById('incorrect-btn'),
+              nextButton = document.getElementById('next-question-button'),
+              currentQNum = document.getElementById('current-q-num'),
+              totalQNum = document.getElementById('total-q-num'),
+              finalMessage = document.getElementById('final-message'),
+              correctCount = document.getElementById('correct-count'),
+              incorrectCount = document.getElementById('incorrect-count'),
+              reviewSection = document.getElementById('review-section'),
+              reviewList = document.getElementById('review-list'),
+              occurrenceTableBody = document.getElementById('occurrence-table-body'),
+              restartButton = document.getElementById('restart-button');
 
-        // Elementos DOM
-        const loadingPanel = document.getElementById('loadingPanel');
-        const errorPanel = document.getElementById('errorPanel');
-        const errorMessage = document.getElementById('errorMessage');
-        const debugInfo = document.getElementById('debugInfo');
-        const configPanel = document.getElementById('configPanel');
-        const categorySelect = document.getElementById('category');
-        const quizContainer = document.getElementById('quizContainer');
-        const resultContainer = document.getElementById('resultContainer');
-        const currentQuestionElement = document.getElementById('currentQuestion');
-        const totalQuestionsElement = document.getElementById('totalQuestions');
-        const questionElement = document.getElementById('question');
-        const optionsElement = document.getElementById('options');
-        const feedbackElement = document.getElementById('feedback');
-        const feedbackTitleElement = document.getElementById('feedbackTitle');
-        const feedbackTextElement = document.getElementById('feedbackText');
-        const legalReferenceContainer = document.getElementById('legalReferenceContainer');
-        const correctAnswersElement = document.getElementById('correctAnswers');
-        const totalAnswersElement = document.getElementById('totalAnswers');
-        const scorePercentageElement = document.getElementById('scorePercentage');
-        const reviewItemsElement = document.getElementById('reviewItems');
-        const statisticsBody = document.getElementById('statisticsBody');
-        const motivationalMessageElement = document.getElementById('motivationalMessage');
-        const studyTipsElement = document.getElementById('studyTips');
-        const reminderSection = document.getElementById('reminderSection');
-        const reminderText = document.getElementById('reminderText');
-        const keywordSection = document.getElementById('keywordSection');
-        const keywordList = document.getElementById('keywordList');
+        // --- ESTADO DE LA APP ---
+        let allQuestions = [], quizQuestions = [], correctAnswers = [], incorrectAnswers = [], currentQuestionIndex = 0;
+        const OCCURRENCE_KEY = 'flashcardOccurrences';
 
-        // Botones
-        const startBtn = document.getElementById('startBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const restartBtn = document.getElementById('restartBtn');
+        // --- LÓGICA DE LA APP ---
 
-        // Parser específico para el formato de tu CSV
-        function parseSpecificCSVFormat(csvText) {
+        const occurrenceTracker = {
+            get: () => JSON.parse(localStorage.getItem(OCCURRENCE_KEY)) || {},
+            save: (data) => localStorage.setItem(OCCURRENCE_KEY, JSON.stringify(data)),
+            init: (questions) => {
+                const data = occurrenceTracker.get();
+                let updated = false;
+                questions.forEach(q => {
+                    if (q && q.ID && data[q.ID] === undefined) {
+                        data[q.ID] = 0;
+                        updated = true;
+                    }
+                });
+                if (updated) occurrenceTracker.save(data);
+            },
+            increment: (questionId) => {
+                if (!questionId) return;
+                const data = occurrenceTracker.get();
+                if (data[questionId] !== undefined) {
+                    data[questionId]++;
+                    occurrenceTracker.save(data);
+                }
+            }
+        };
+
+        // Función mejorada para parsear CSV
+        const parseCSV = (text) => {
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (lines.length < 2) throw new Error('CSV vacío o sin cabeceras.');
+            
             const questions = [];
-            const lines = csvText.split('\n');
-            
-            console.log('📄 Total de líneas en CSV:', lines.length);
-            
-            // Saltar la primera línea (header)
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
                 
                 try {
-                    console.log(`🔍 Procesando línea ${i}:`, line.substring(0, 100) + '...');
+                    // Usar una expresión regular para dividir por comas fuera de comillas
+                    const fields = [];
+                    let current = '';
+                    let inQuotes = false;
+                    let quoteChar = null;
                     
-                    // Tu CSV tiene el formato: "ID,Category,"Question","Answer","Reasoning","Legal_Reference"
-                    // Necesitamos extraer cada campo considerando las comillas especiales
+                    for (let j = 0; j < line.length; j++) {
+                        const char = line[j];
+                        const nextChar = line[j + 1];
+                        
+                        if (!inQuotes && (char === '"' || char === "'")) {
+                            inQuotes = true;
+                            quoteChar = char;
+                        } else if (inQuotes && char === quoteChar) {
+                            if (nextChar === quoteChar) {
+                                current += char;
+                                j++; // Saltar el siguiente carácter
+                            } else {
+                                inQuotes = false;
+                                quoteChar = null;
+                            }
+                        } else if (!inQuotes && char === ',') {
+                            fields.push(current);
+                            current = '';
+                        } else if (char !== '"' && char !== "'") {
+                            current += char;
+                        }
+                    }
+                    fields.push(current);
                     
-                    const match = line.match(/^"(\d+),(.*?),""(.*?)"",""(.*?)"",""(.*?)"",""(.*?)""$/);
+                    // Limpiar campos
+                    const cleanFields = fields.map(field => field.trim().replace(/^["']|["']$/g, ''));
                     
-                    if (match) {
-                        const [, id, category, question, answer, reasoning, legalRef] = match;
-                        
-                        // Limpiar las comillas dobles escapadas
-                        const cleanQuestion = question.replace(/""/g, '"');
-                        const cleanAnswer = answer.replace(/""/g, '"');
-                        const cleanReasoning = reasoning.replace(/""/g, '"');
-                        const cleanLegalRef = legalRef.replace(/""/g, '"');
-                        
-                        // Extraer recordatorios y palabras clave
-                        const { cleanText, reminder, keywords } = extractDataFromText(cleanAnswer);
-                        
-                        const questionObj = {
-                            ID: parseInt(id),
-                            Category: category,
-                            Question: cleanQuestion,
-                            Answer: cleanText,
-                            Reasoning: cleanReasoning,
-                            Legal_Reference: cleanLegalRef,
-                            Reminder: reminder,
-                            Keywords: keywords
+                    if (cleanFields.length >= 6) {
+                        const question = {
+                            ID: cleanFields[0],
+                            Category: cleanFields[1],
+                            Question: cleanFields[2],
+                            Answer: cleanFields[3],
+                            Reasoning: cleanFields[4],
+                            Legal_Reference: cleanFields[5]
                         };
                         
-                        questions.push(questionObj);
-                        availableCategories.add(category);
-                        
-                        console.log(`✅ Pregunta ${id} procesada exitosamente`);
-                        
-                    } else {
-                        console.warn(`⚠️ Línea ${i} no coincide con el formato esperado`);
+                        if (question.ID && question.Category && question.Question && question.Answer) {
+                            questions.push(question);
+                        }
                     }
-                    
-                } catch (error) {
-                    console.error(`❌ Error procesando línea ${i}:`, error);
+                } catch (parseError) {
+                    console.warn(`Error parsing line ${i}:`, parseError);
                 }
             }
             
             return questions;
-        }
+        };
 
-        // Función para extraer recordatorios y palabras clave del texto
-        function extractDataFromText(text) {
-            if (!text) return { cleanText: '', reminder: '', keywords: [] };
-            
-            let cleanText = text;
-            let reminder = '';
-            let keywords = [];
-            
-            // Buscar recordatorios
-            const reminderPatterns = [
-                /Recuerda:\s*([^.]+\.?)/i,
-                /Mnemotecnia:\s*([^.]+\.?)/i,
-                /Analogía:\s*([^.]+\.?)/i
-            ];
-            
-            for (const pattern of reminderPatterns) {
-                const match = text.match(pattern);
-                if (match) {
-                    reminder = match[1].trim();
-                    cleanText = cleanText.replace(pattern, '').trim();
-                    break;
-                }
-            }
-            
-            // Buscar palabras clave
-            const keywordMatch = text.match(/Palabras clave:\s*([^.]+)/i);
-            if (keywordMatch) {
-                keywords = keywordMatch[1].split(',').map(k => k.trim()).filter(k => k.length > 0);
-                cleanText = cleanText.replace(/Palabras clave:\s*[^.]+\.?/i, '').trim();
-            }
-            
-            // Limpiar otros patrones
-            cleanText = cleanText
-                .replace(/Ejemplo:\s*[^.]+\.?/gi, '')
-                .trim();
-            
-            return { cleanText, reminder, keywords };
-        }
+        const handleFileUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
 
-        // Función para cargar y parsear el CSV
-        async function loadQuestionsFromCSV() {
-            try {
-                console.log('🚀 Iniciando carga del CSV...');
-                
-                const response = await fetch('FC_ADMINISTRATIVO_BEST.csv');
-                
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
-                }
-                
-                const csvText = await response.text();
-                console.log('📊 CSV cargado, tamaño:', csvText.length, 'caracteres');
-                
-                // Mostrar una muestra del CSV en debug
-                const sample = csvText.substring(0, 500);
-                console.log('📋 Muestra del CSV:', sample);
-                
-                // Usar el parser específico
-                questionsData = parseSpecificCSVFormat(csvText);
-                
-                console.log(`✅ Total preguntas procesadas: ${questionsData.length}`);
-                console.log('📁 Categorías encontradas:', Array.from(availableCategories));
-                
-                if (questionsData.length === 0) {
-                    throw new Error('No se encontraron preguntas válidas en el archivo CSV');
-                }
-                
-                // Llenar el selector de categorías
-                populateCategorySelector();
-                
-                // Mostrar panel de configuración
-                showConfigPanel();
-                
-            } catch (error) {
-                console.error('❌ Error al cargar CSV:', error);
-                showError(`Error al cargar las preguntas: ${error.message}`, {
-                    totalLines: 0,
-                    questionsFound: questionsData.length,
-                    categories: Array.from(availableCategories),
-                    error: error.toString()
-                });
-            }
-        }
-
-        // Función para llenar el selector de categorías
-        function populateCategorySelector() {
-            categorySelect.innerHTML = '<option value="TODO" selected>Todo</option>';
-            
-            const sortedCategories = Array.from(availableCategories).sort();
-            sortedCategories.forEach(category => {
-                if (category && category !== 'TODO') {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    categorySelect.appendChild(option);
-                }
-            });
-        }
-
-        // Función para mostrar error con debug
-        function showError(message, debugData = null) {
-            loadingPanel.style.display = 'none';
-            configPanel.style.display = 'none';
-            errorMessage.textContent = message;
-            
-            if (debugData) {
-                debugInfo.innerHTML = `
-                    <strong>Información de debug:</strong><br>
-                    Líneas totales: ${debugData.totalLines}<br>
-                    Preguntas encontradas: ${debugData.questionsFound}<br>
-                    Categorías: ${debugData.categories.join(', ')}<br>
-                    Error: ${debugData.error}
-                `;
-                debugInfo.style.display = 'block';
-            }
-            
-            errorPanel.style.display = 'block';
-        }
-
-        // Función para mostrar el panel de configuración
-        function showConfigPanel() {
-            loadingPanel.style.display = 'none';
-            errorPanel.style.display = 'none';
-            configPanel.style.display = 'block';
-        }
-
-        // Sistema de selección aleatoria
-        function getRandomNumbers(count, min, max) {
-            const numbers = [];
-            const available = [];
-            
-            for (let i = min; i <= max; i++) {
-                available.push(i);
-            }
-            
-            for (let i = 0; i < count && i < available.length; i++) {
-                const randomIndex = Math.floor(Math.random() * (available.length - i)) + i;
-                [available[i], available[randomIndex]] = [available[randomIndex], available[i]];
-                numbers.push(available[i]);
-            }
-            
-            return numbers;
-        }
-
-        function selectQuestionsByRandomIds(numQuestions, category) {
-            console.log('🎲 Seleccionando preguntas:', numQuestions, 'Categoría:', category);
-            
-            let availableQuestions = questionsData;
-            
-            if (category !== "TODO") {
-                availableQuestions = questionsData.filter(q => q.Category === category);
-            }
-            
-            console.log('📊 Preguntas disponibles:', availableQuestions.length);
-            
-            const numToSelect = Math.min(numQuestions, availableQuestions.length);
-            const randomIndices = getRandomNumbers(numToSelect, 0, availableQuestions.length - 1);
-            
-            const selectedQuestions = randomIndices.map(index => availableQuestions[index]);
-            
-            console.log('✅ Preguntas seleccionadas:', selectedQuestions.length);
-            return selectedQuestions;
-        }
-
-        // Función para generar opciones incorrectas
-        function generateIncorrectOptions(correctAnswer, question) {
-            const incorrectOptions = [];
-            
-            // Estrategias para generar opciones incorrectas
-            if (question.toLowerCase().includes("verdadero") || question.toLowerCase().includes("falso") || question.toLowerCase().includes("v/f")) {
-                if (correctAnswer.toLowerCase().startsWith("verdadero")) {
-                    incorrectOptions.push(correctAnswer.replace(/^Verdadero\./i, "Falso."));
-                } else if (correctAnswer.toLowerCase().startsWith("falso")) {
-                    incorrectOptions.push(correctAnswer.replace(/^Falso\./i, "Verdadero."));
-                }
-                incorrectOptions.push("Depende del contexto y la normativa aplicable");
-                incorrectOptions.push("Solo es verdadero en casos excepcionales");
-            } else {
-                // Modificaciones semánticas para otras preguntas
-                const modificaciones = [
-                    { original: /no pueden/g, reemplazo: "pueden" },
-                    { original: /pueden/g, reemplazo: "no pueden" },
-                    { original: /obligatorio/g, reemplazo: "voluntario" },
-                    { original: /siempre/g, reemplazo: "nunca" },
-                    { original: /Gobierno/g, reemplazo: "Parlamento" },
-                    { original: /un mes/g, reemplazo: "dos meses" },
-                    { original: /30 días/g, reemplazo: "45 días" }
-                ];
-                
-                for (const mod of modificaciones) {
-                    if (correctAnswer.match(mod.original) && incorrectOptions.length < 3) {
-                        incorrectOptions.push(correctAnswer.replace(mod.original, mod.reemplazo));
-                    }
-                }
-                
-                // Completar con opciones genéricas
-                while (incorrectOptions.length < 3) {
-                    const opcionesGenericas = [
-                        "Ninguna de las anteriores es correcta",
-                        "Todas las anteriores son correctas",
-                        "Solo es aplicable en casos excepcionales"
-                    ];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const text = e.target.result;
+                    allQuestions = parseCSV(text);
                     
-                    const opcion = opcionesGenericas[incorrectOptions.length % opcionesGenericas.length];
-                    if (!incorrectOptions.includes(opcion)) {
-                        incorrectOptions.push(opcion);
-                    } else {
-                        break;
+                    if (allQuestions.length === 0) {
+                        throw new Error("No se pudieron procesar las preguntas. Revisa el formato del CSV.");
                     }
+
+                    occurrenceTracker.init(allQuestions);
+                    errorBox.classList.add('hidden');
+                    infoBox.textContent = `¡Éxito! Se han cargado ${allQuestions.length} preguntas.`;
+                    infoBox.classList.remove('hidden');
+                    numQuestionsInput.max = allQuestions.length;
+                    numQuestionsInput.disabled = false;
+                    startButton.disabled = false;
+
+                } catch (err) {
+                    console.error('Error processing CSV:', err);
+                    errorBox.textContent = `Error al procesar el CSV: ${err.message}`;
+                    errorBox.classList.remove('hidden');
+                    infoBox.classList.add('hidden');
                 }
-            }
-            
-            return incorrectOptions.slice(0, 3);
-        }
+            };
+            reader.readAsText(file, 'UTF-8');
+        };
 
-        // Función para mostrar pregunta
-        function showQuestion() {
-            const question = currentQuestions[currentQuestionIndex];
-            
-            // Actualizar estadísticas
-            const questionId = question.ID;
-            if (!sessionStats[questionId]) {
-                sessionStats[questionId] = { 
-                    question: question.Question, 
-                    timesShown: 0 
-                };
-            }
-            sessionStats[questionId].timesShown++;
-            
-            // Actualizar UI
-            currentQuestionElement.textContent = currentQuestionIndex + 1;
-            questionElement.textContent = question.Question;
-            
-            // Crear opciones
-            const options = [question.Answer];
-            const incorrectOptions = generateIncorrectOptions(question.Answer, question.Question);
-            options.push(...incorrectOptions);
-            
-            // Mezclar opciones
-            for (let i = options.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [options[i], options[j]] = [options[j], options[i]];
-            }
-            
-            // Mostrar opciones
-            optionsElement.innerHTML = '';
-            options.forEach((option, index) => {
-                const button = document.createElement('button');
-                button.className = 'option';
-                button.textContent = option;
-                button.onclick = () => selectOption(button, option === question.Answer);
-                optionsElement.appendChild(button);
-            });
-            
-            // Resetear feedback
-            feedbackElement.style.display = 'none';
-            nextBtn.style.display = 'none';
-            selectedAnswer = null;
-        }
+        const formatLegalReferenceText = (questionData) => {
+            const lawMapping = {
+                'BOE-A-2015-10565': 'Ley 39/2015',
+                'BOE-A-2015-10566': 'Ley 40/2015',
+                'BOE-A-1978-31229': 'CE',
+                'BOE-A-2017-12902': 'LCSP',
+                'BOE-A-2003-23186': 'LPAP',
+                'BOE-A-2013-12887': 'Ley 19/2013',
+                'BOE-A-1889-4763': 'Código Civil',
+                'BOE-A-2007-6115': 'Ley de Igualdad',
+                'BOE-A-1954-6364': 'LEF',
+                'BOE-A-2007-7788': 'EBEP',
+                'BOE-A-2006-13087': 'Ley 6/2006'
+            };
 
-        // Función para seleccionar opción
-        function selectOption(button, isCorrect) {
-            if (selectedAnswer !== null) return;
+            const url = questionData.Legal_Reference;
+            if (!url) return "Ver disposición";
             
-            selectedAnswer = isCorrect;
-            button.classList.add('selected');
-            
-            // Deshabilitar opciones
-            const allOptions = optionsElement.querySelectorAll('.option');
-            allOptions.forEach(opt => {
-                opt.style.pointerEvents = 'none';
-                if (opt.textContent === currentQuestions[currentQuestionIndex].Answer) {
-                    opt.classList.add('correct');
-                } else if (opt === button && !isCorrect) {
-                    opt.classList.add('incorrect');
-                }
-            });
-            
-            setTimeout(() => showFeedback(isCorrect), 500);
-        }
+            let lawText = '';
+            let articleText = '';
 
-        // Función para mostrar feedback
-        function showFeedback(isCorrect) {
-            const question = currentQuestions[currentQuestionIndex];
-            
-            feedbackElement.style.display = 'block';
-            feedbackElement.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
-            
-            if (isCorrect) {
-                score++;
-                feedbackTitleElement.textContent = '¡Correcto! 🎉';
-                feedbackTextElement.textContent = 'Has acertado la respuesta.';
-            } else {
-                feedbackTitleElement.textContent = 'Incorrecto 😔';
-                feedbackTextElement.innerHTML = `<strong>Respuesta correcta:</strong><br>${question.Answer}`;
-                
-                incorrectAnswers.push({
-                    question: question.Question,
-                    correctAnswer: question.Answer,
-                    legalReference: question.Legal_Reference
-                });
+            const boeMatch = url.match(/id=(BOE-A-\d{4}-\d+)/);
+            if (boeMatch && lawMapping[boeMatch[1]]) {
+                lawText = lawMapping[boeMatch[1]];
             }
-            
-            // Referencia legal
-            if (question.Legal_Reference) {
-                legalReferenceContainer.innerHTML = `<strong>Referencia legal:</strong> <a href="${question.Legal_Reference}" target="_blank">${question.Legal_Reference}</a>`;
-            }
-            
-            // Mostrar recordatorios y palabras clave
-            if (question.Reminder || (question.Keywords && question.Keywords.length > 0)) {
-                studyTipsElement.style.display = 'block';
-                
-                if (question.Reminder) {
-                    reminderSection.style.display = 'block';
-                    reminderText.textContent = question.Reminder;
-                } else {
-                    reminderSection.style.display = 'none';
-                }
-                
-                if (question.Keywords && question.Keywords.length > 0) {
-                    keywordSection.style.display = 'block';
-                    keywordList.innerHTML = '';
-                    question.Keywords.forEach(keyword => {
-                        const tag = document.createElement('span');
-                        tag.className = 'keyword-tag';
-                        tag.textContent = keyword;
-                        keywordList.appendChild(tag);
-                    });
-                } else {
-                    keywordSection.style.display = 'none';
-                }
-            } else {
-                studyTipsElement.style.display = 'none';
-            }
-            
-            nextBtn.style.display = 'block';
-            nextBtn.textContent = currentQuestionIndex < currentQuestions.length - 1 ? 
-                'Siguiente Pregunta' : 'Ver Resultados';
-        }
 
-        // Función para siguiente pregunta
-        function nextQuestion() {
-            currentQuestionIndex++;
-            
-            if (currentQuestionIndex < currentQuestions.length) {
-                showQuestion();
-            } else {
-                showResults();
+            const articleMatch = url.match(/#a(\d+)/);
+            if (articleMatch) {
+                articleText = `, art. ${articleMatch[1]}`;
             }
-        }
 
-        // Función para mostrar resultados
-        function showResults() {
-            quizContainer.style.display = 'none';
-            resultContainer.style.display = 'block';
-            
-            const percentage = Math.round((score / currentQuestions.length) * 100);
-            
-            correctAnswersElement.textContent = score;
-            totalAnswersElement.textContent = currentQuestions.length;
-            scorePercentageElement.textContent = `${percentage}%`;
-            
-            // Mensaje motivacional
-            let motivationalMsg = '';
-            if (percentage === 100) {
-                motivationalMsg = '¡Perfecto! 🏆 Has demostrado un dominio excelente del tema.';
-            } else if (percentage >= 80) {
-                motivationalMsg = '¡Excelente trabajo! 🌟 Tu conocimiento es muy sólido.';
-            } else if (percentage >= 60) {
-                motivationalMsg = '¡Buen trabajo! 💪 Vas por buen camino.';
-            } else {
-                motivationalMsg = '¡Sigue practicando! 📚 Cada error es una oportunidad de aprendizaje.';
+            if (lawText) {
+                return `${lawText}${articleText}`;
             }
             
-            motivationalMessageElement.textContent = motivationalMsg;
-            
-            // Preguntas para repasar
-            if (incorrectAnswers.length > 0) {
-                reviewItemsElement.innerHTML = '';
-                incorrectAnswers.forEach((item, index) => {
-                    const reviewDiv = document.createElement('div');
-                    reviewDiv.className = 'review-item';
-                    reviewDiv.innerHTML = `
-                        <div class="review-question">${index + 1}. ${item.question}</div>
-                        <div class="review-answer">${item.correctAnswer}</div>
-                        <div class="legal-reference">Referencia: ${item.legalReference}</div>
-                    `;
-                    reviewItemsElement.appendChild(reviewDiv);
-                });
-                document.getElementById('reviewList').style.display = 'block';
-            } else {
-                document.getElementById('reviewList').style.display = 'none';
-            }
-            
-            updateStatisticsTable();
-        }
+            return "Ver disposición";
+        };
 
-        // Función para actualizar tabla de estadísticas
-        function updateStatisticsTable() {
-            statisticsBody.innerHTML = '';
-            
-            const sortedIds = Object.keys(sessionStats).sort((a, b) => parseInt(a) - parseInt(b));
-            
-            sortedIds.forEach(id => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${id}</td>
-                    <td>${sessionStats[id].question.substring(0, 60)}...</td>
-                    <td>${sessionStats[id].timesShown}</td>
-                `;
-                statisticsBody.appendChild(row);
-            });
-        }
-
-        // Función para iniciar quiz
-        function startQuiz() {
-            const numCards = parseInt(document.getElementById('numCards').value);
-            category = document.getElementById('category').value;
-            
-            if (questionsData.length === 0) {
-                alert('Error: No hay preguntas cargadas.');
+        const startGame = () => {
+            const num = parseInt(numQuestionsInput.value);
+            if (isNaN(num) || num <= 0 || num > allQuestions.length) {
+                errorBox.textContent = `Introduce un número válido entre 1 y ${allQuestions.length}.`;
+                errorBox.classList.remove('hidden');
                 return;
             }
-            
-            currentQuestions = selectQuestionsByRandomIds(numCards, category);
-            
-            if (currentQuestions.length === 0) {
-                alert('No se encontraron preguntas para la categoría seleccionada.');
-                return;
-            }
-            
-            currentQuestionIndex = 0;
-            score = 0;
+            correctAnswers = [];
             incorrectAnswers = [];
+            const indices = new Set();
+            while (indices.size < num) {
+                indices.add(Math.floor(Math.random() * allQuestions.length));
+            }
+            quizQuestions = Array.from(indices).map(i => allQuestions[i]);
+            currentQuestionIndex = 0;
+            setupScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            displayQuestion();
+        };
+
+        const displayQuestion = () => {
+            if (currentQuestionIndex >= quizQuestions.length) {
+                showResults();
+                return;
+            }
+            const q = quizQuestions[currentQuestionIndex];
+            occurrenceTracker.increment(q.ID);
+            category.textContent = q.Category;
+            questionText.textContent = q.Question;
             
-            totalQuestionsElement.textContent = currentQuestions.length;
+            let formattedAnswer = q.Answer
+                .replace(/Palabras clave:/g, '<br><br><strong>Palabras clave:</strong>')
+                .replace(/Analogía:/g, '<br><br><strong>Analogía:</strong>');
+            correctAnswerText.innerHTML = formattedAnswer;
             
-            configPanel.style.display = 'none';
-            quizContainer.style.display = 'block';
-            resultContainer.style.display = 'none';
+            reasoningText.textContent = q.Reasoning;
             
-            showQuestion();
+            // Configurar enlace legal
+            if (q.Legal_Reference && q.Legal_Reference.trim() !== '') {
+                legalRefLink.href = q.Legal_Reference.trim();
+                legalRefText.textContent = formatLegalReferenceText(q);
+                legalRefLink.parentElement.style.display = 'block';
+            } else {
+                legalRefLink.parentElement.style.display = 'none';
+            }
+
+            currentQNum.textContent = currentQuestionIndex + 1;
+            totalQNum.textContent = quizQuestions.length;
+            userAnswer.value = '';
+            feedbackSection.classList.add('hidden');
+            aiResponseContainer.classList.add('hidden');
+            aiResponseContent.innerHTML = '';
+            aiEnhanceButton.classList.remove('hidden');
+            verifyButton.classList.remove('hidden');
+            nextButton.classList.add('hidden');
+            evalButtons.classList.remove('hidden');
+        };
+        
+        const showFeedback = () => {
+            verifyButton.classList.add('hidden');
+            feedbackSection.classList.remove('hidden');
+            feedbackMessage.classList.add('hidden');
+        };
+
+        const handleEvaluation = (isCorrect) => {
+            evalButtons.classList.add('hidden');
+            nextButton.classList.remove('hidden');
+            if (isCorrect) {
+                correctAnswers.push(quizQuestions[currentQuestionIndex]);
+                feedbackMessage.textContent = '¡Excelente! Respuesta correcta. 🎉';
+                feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-correct';
+            } else {
+                incorrectAnswers.push(quizQuestions[currentQuestionIndex]);
+                feedbackMessage.textContent = '¡Ánimo! Lo importante es aprender de los errores. 💪';
+                feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-incorrect';
+            }
+            feedbackMessage.classList.remove('hidden');
+        };
+        
+        const getAIEnhancement = async () => {
+            const q = quizQuestions[currentQuestionIndex];
+            aiEnhanceButton.classList.add('hidden');
+            aiResponseContainer.classList.remove('hidden');
+            aiSpinner.classList.remove('hidden');
+            aiResponseContent.innerHTML = '';
+
+            const prompt = `Eres un tutor experto en derecho administrativo español. La siguiente es una pregunta de oposiciones. Proporciona una explicación mejorada, clara y concisa para un opositor. Puedes añadir ejemplos prácticos si ayuda a la comprensión. Mantén un tono motivador y de apoyo.
+
+Pregunta: "${q.Question}"
+Respuesta Correcta: "${q.Answer}"
+Justificación Original: "${q.Reasoning}"
+
+Tu explicación mejorada:`;
+
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`Error de la API: ${response.statusText}`);
+
+                const result = await response.json();
+                
+                let text = "No se pudo obtener una explicación de la IA.";
+                if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    text = result.candidates[0].content.parts[0].text;
+                }
+                
+                aiResponseContent.innerHTML = `<h5 class="font-bold text-violet-300 mb-2">Explicación del Tutor IA:</h5><p class="text-slate-300">${text.replace(/\n/g, '<br>')}</p>`;
+
+            } catch (error) {
+                aiResponseContent.innerHTML = `<p class="text-red-400">Error al contactar con la IA: ${error.message}</p>`;
+            } finally {
+                aiSpinner.classList.add('hidden');
+            }
+        };
+
+        const showResults = () => {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            correctCount.textContent = correctAnswers.length;
+            incorrectCount.textContent = incorrectAnswers.length;
+            const percentage = quizQuestions.length > 0 ? (correctAnswers.length / quizQuestions.length) * 100 : 0;
+            if (percentage >= 80) finalMessage.textContent = "¡Magnífico trabajo! Tu esfuerzo está dando frutos. Sigue así.";
+            else if (percentage >= 50) finalMessage.textContent = "¡Buen progreso! Estás construyendo una base sólida. ¡A por la siguiente!";
+            else finalMessage.textContent = "Cada error es un paso más hacia el éxito. ¡No te rindas, la constancia es la clave!";
+            
+            if (incorrectAnswers.length > 0) {
+                reviewList.innerHTML = incorrectAnswers.map((q, i) => `<div class="p-3 bg-slate-900 rounded-lg"><p class="font-semibold text-slate-300">${i + 1}. ${q.Question}</p><p class="mt-1 text-green-400"><strong>R:</strong> ${q.Answer}</p></div>`).join('');
+                reviewSection.classList.remove('hidden');
+            } else {
+                reviewSection.classList.add('hidden');
+            }
+            const occurrenceData = occurrenceTracker.get();
+            occurrenceTableBody.innerHTML = allQuestions.map(q => `<tr><td class="p-2">${q.Question.substring(0, 70)}...</td><td class="p-2 w-28 text-center font-bold">${occurrenceData[q.ID] || 0}</td></tr>`).join('');
+        };
+        
+        const restartApp = () => {
+            resultsScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+            csvFileInput.value = '';
+            numQuestionsInput.value = '';
+            numQuestionsInput.disabled = true;
+            startButton.disabled = true;
+            infoBox.classList.add('hidden');
+            errorBox.classList.add('hidden');
+        };
+
+        // --- EVENT LISTENERS ---
+        csvFileInput.addEventListener('change', handleFileUpload);
+        startButton.addEventListener('click', startGame);
+        verifyButton.addEventListener('click', showFeedback);
+        aiEnhanceButton.addEventListener('click', getAIEnhancement);
+        correctBtn.addEventListener('click', () => handleEvaluation(true));
+        incorrectBtn.addEventListener('click', () => handleEvaluation(false));
+        nextButton.addEventListener('click', () => { currentQuestionIndex++; displayQuestion(); });
+        restartButton.addEventListener('click', restartApp);
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.interimResults = false;
+            micButton.addEventListener('click', () => {
+                try {
+                    micStatus.textContent = '🎤 Escuchando...';
+                    recognition.start();
+                } catch(e) { micStatus.textContent = 'El micrófono ya está activo.'; }
+            });
+            recognition.onresult = (event) => { userAnswer.value = event.results[0][0].transcript; micStatus.textContent = ''; };
+            recognition.onerror = (event) => { micStatus.textContent = `Error: ${event.error}`; };
+            recognition.onend = () => { if (micStatus.textContent === '🎤 Escuchando...') micStatus.textContent = ''; };
+        } else {
+            micButton.style.display = 'none';
         }
-
-        // Función para reiniciar
-        function restartQuiz() {
-            configPanel.style.display = 'block';
-            quizContainer.style.display = 'none';
-            resultContainer.style.display = 'none';
-        }
-
-        // Event listeners
-        startBtn.addEventListener('click', startQuiz);
-        nextBtn.addEventListener('click', nextQuestion);
-        restartBtn.addEventListener('click', restartQuiz);
-
-        // Cargar preguntas al iniciar
-        window.addEventListener('load', () => {
-            console.log('🚀 Iniciando aplicación FlashCards...');
-            loadQuestionsFromCSV();
-        });
+    });
     </script>
 </body>
 </html>
