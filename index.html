@@ -1,14 +1,9 @@
-Confirmo que modificaré el código para que el sistema de selección aleatoria funcione con IDs desde 2 hasta 126, tal como indica tu documento.
-
-Aquí está la actualización del código con el rango correcto:
-
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlashCards Quiz</title>
+    <title>FlashCards Quiz - Derecho Administrativo</title>
     <style>
         :root {
             --primary-color: #3498db;
@@ -34,6 +29,7 @@ Aquí está la actualización del código con el rango correcto:
             background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.6;
+            min-height: 100vh;
         }
 
         .container {
@@ -60,6 +56,43 @@ Aquí está la actualización del código con el rango correcto:
             opacity: 0.8;
         }
 
+        .loading-panel {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-panel h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 4px solid #333;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-panel {
+            background-color: rgba(231, 76, 60, 0.2);
+            border: 1px solid var(--incorrect-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
         .config-panel {
             background-color: var(--card-color);
             border-radius: 10px;
@@ -67,6 +100,7 @@ Aquí está la actualización del código con el rango correcto:
             margin-bottom: 30px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
+            display: none;
         }
 
         .config-panel h2 {
@@ -84,7 +118,7 @@ Aquí está la actualización del código con el rango correcto:
             font-weight: bold;
         }
 
-        .form-group select, .form-group input {
+        .form-group select {
             width: 100%;
             padding: 10px 15px;
             border: none;
@@ -108,6 +142,11 @@ Aquí está la actualización del código con el rango correcto:
 
         button:hover {
             background-color: var(--secondary-color);
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
         }
 
         .quiz-container {
@@ -155,12 +194,14 @@ Aquí está la actualización del código con el rango correcto:
             padding: 15px;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
             font-weight: normal;
+            text-align: left;
         }
 
-        .option:hover {
+        .option:hover:not(.selected):not(.correct):not(.incorrect) {
             background-color: var(--hover-color);
+            transform: translateX(5px);
         }
 
         .option.selected {
@@ -170,10 +211,24 @@ Aquí está la actualización del código con el rango correcto:
 
         .option.correct {
             background-color: var(--correct-color);
+            animation: pulse 0.5s;
         }
 
         .option.incorrect {
             background-color: var(--incorrect-color);
+            animation: shake 0.5s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .feedback {
@@ -181,6 +236,12 @@ Aquí está la actualización del código con el rango correcto:
             padding: 15px;
             border-radius: 5px;
             display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .feedback.correct {
@@ -308,6 +369,7 @@ Aquí está la actualización del código con el rango correcto:
 
         .review-answer {
             color: var(--correct-color);
+            margin-bottom: 5px;
         }
 
         .restart-btn {
@@ -320,6 +382,7 @@ Aquí está la actualización del código con el rango correcto:
             width: 100%;
             margin-top: 20px;
             border-collapse: collapse;
+            font-size: 0.9rem;
         }
 
         .statistics-table th, .statistics-table td {
@@ -330,6 +393,7 @@ Aquí está la actualización del código con el rango correcto:
 
         .statistics-table th {
             background-color: #2c2c2c;
+            color: var(--primary-color);
         }
 
         .statistics-table tr:nth-child(even) {
@@ -361,8 +425,12 @@ Aquí está la actualización del código con el rango correcto:
                 font-size: 2rem;
             }
             
-            .options {
-                grid-template-columns: 1fr;
+            .question {
+                font-size: 1.1rem;
+            }
+            
+            .option {
+                padding: 12px;
             }
         }
 
@@ -371,32 +439,38 @@ Aquí está la actualización del código con el rango correcto:
             text-align: center;
             margin: 20px 0;
             color: #ddd;
-        }
-
-        .debug-info {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            font-size: 0.85rem;
-            font-family: monospace;
-            display: none;
+            font-size: 1.1rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>FlashCards Quiz</h1>
-            <p>Pon a prueba tus conocimientos con nuestro juego de tarjetas!</p>
+            <h1>FlashCards Quiz - Derecho Administrativo</h1>
+            <p>Pon a prueba tus conocimientos con nuestro sistema de tarjetas aleatorias</p>
         </header>
 
+        <!-- Panel de carga -->
+        <div class="loading-panel" id="loadingPanel">
+            <h2>Cargando preguntas...</h2>
+            <div class="loading-spinner"></div>
+            <p>Por favor, espera mientras se cargan las preguntas desde el archivo CSV.</p>
+        </div>
+
+        <!-- Panel de error -->
+        <div class="error-panel" id="errorPanel" style="display: none;">
+            <h2>Error al cargar las preguntas</h2>
+            <p id="errorMessage">Ha ocurrido un problema al cargar el archivo CSV.</p>
+            <button onclick="location.reload()">Reintentar</button>
+        </div>
+
+        <!-- Panel de configuración -->
         <div class="config-panel" id="configPanel">
             <h2>Configura tu Quiz</h2>
             <div class="form-group">
                 <label for="numCards">Número de Flashcards:</label>
                 <select id="numCards">
-                    <option value="5">5 preguntas</option>
+                    <option value="5" selected>5 preguntas</option>
                     <option value="10">10 preguntas</option>
                     <option value="15">15 preguntas</option>
                     <option value="20">20 preguntas</option>
@@ -406,15 +480,13 @@ Aquí está la actualización del código con el rango correcto:
             <div class="form-group">
                 <label for="category">Bloque Temático:</label>
                 <select id="category">
-                    <option value="TODO">Todo</option>
-                    <option value="administrativo">Administrativo</option>
-                    <option value="civil">Civil</option>
-                    <option value="mercantil">Mercantil</option>
+                    <option value="TODO" selected>Todo</option>
                 </select>
             </div>
             <button id="startBtn">¡Comenzar Quiz!</button>
         </div>
 
+        <!-- Contenedor del quiz -->
         <div class="quiz-container" id="quizContainer">
             <div class="quiz-header">
                 <div class="quiz-progress">Pregunta <span id="currentQuestion">1</span> de <span id="totalQuestions">5</span></div>
@@ -439,13 +511,13 @@ Aquí está la actualización del código con el rango correcto:
                 </div>
             </div>
             <button id="nextBtn" style="display: none;">Siguiente Pregunta</button>
-            <div class="debug-info" id="debugInfo"></div>
         </div>
 
+        <!-- Contenedor de resultados -->
         <div class="result-container" id="resultContainer">
             <div class="result-header">
-                <h2>Resultados del Quiz</h2>
-                <p>¡Has completado el quiz! Aquí tienes un resumen de tu rendimiento.</p>
+                <h2>¡Quiz Completado!</h2>
+                <p>Aquí están tus resultados</p>
             </div>
             <div class="result-stats" id="resultStats">
                 <p>Aciertos: <span id="correctAnswers">0</span> de <span id="totalAnswers">0</span></p>
@@ -454,17 +526,17 @@ Aquí está la actualización del código con el rango correcto:
             <div class="motivational" id="motivationalMessage">
                 ¡Excelente trabajo! Sigue practicando para mejorar tus conocimientos.
             </div>
-            <div class="review-list" id="reviewList">
+            <div class="review-list" id="reviewList" style="display: none;">
                 <h3>Preguntas para repasar:</h3>
                 <div id="reviewItems"></div>
             </div>
-            <h3>Estadísticas de preguntas:</h3>
+            <h3>Estadísticas de preguntas mostradas:</h3>
             <table class="statistics-table" id="statisticsTable">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Pregunta</th>
-                        <th>Veces mostrada</th>
+                        <th>Veces mostrada (sesión actual)</th>
                     </tr>
                 </thead>
                 <tbody id="statisticsBody"></tbody>
@@ -474,1340 +546,10 @@ Aquí está la actualización del código con el rango correcto:
     </div>
 
     <script>
-        // IMPORTANTE: Aquí deberás cargar los datos completos del CSV
-        // Por ahora incluyo un array vacío que deberá ser llenado con las 126 preguntas
-        const questionsData = [
-    {
-        ID: 1,
-        Category: "administrativo",
-        Question: "¿Qué son los decretos-leyes y qué función cumplen en el derecho administrativo?",
-        Answer: "Los decretos-leyes son normas con rango de ley dictadas por el Gobierno solo cuando hay una situación de extraordinaria y urgente necesidad. Son una fuente directa del derecho administrativo porque tienen fuerza de ley. No pueden regular materias reservadas a la ley orgánica, al régimen de las comunidades autónomas, al derecho electoral general ni a los derechos, deberes y libertades del Título I de la Constitución. Para ser válidos, deben ser convalidados por el Congreso en 30 días.",
-        Reasoning: "Los decretos-leyes permiten al Gobierno actuar con rapidez ante situaciones excepcionales, pero su uso está limitado para proteger materias sensibles. Requieren siempre la convalidación del Congreso, lo que garantiza el control democrático.",
-        Legal_Reference: "Constitución Española, artículo 86",
-        Reminder: "D-L = Decisión rápida del Gobierno, pero con control del Congreso. Solo en casos graves y siempre bajo supervisión",
-        Keywords: ["urgencia", "Gobierno", "ley", "límites", "convalidación", "30 días"]
-    },
-    {
-        ID: 2,
-        Category: "administrativo",
-        Question: "¿Cuáles son las fuentes indirectas del derecho administrativo?",
-        Answer: "Las fuentes indirectas son: la costumbre (lo que se hace habitualmente), los principios generales del derecho (ideas básicas de justicia) y la jurisprudencia (decisiones de los tribunales).",
-        Reasoning: "Estas fuentes no tienen fuerza de ley, pero ayudan a interpretar y aplicar el derecho cuando la ley no regula un caso concreto. Son como 'reglas de apoyo' que orientan a la Administración y a los jueces.",
-        Legal_Reference: "Código Civil, artículo 1",
-        Reminder: "Co-Prin-Jur (Costumbre, Principios, Jurisprudencia). Cuando falta la ley, se consulta la costumbre, los principios y la jurisprudencia",
-        Keywords: ["costumbre", "principios", "jurisprudencia"]
-    },
-    {
-        ID: 3,
-        Category: "administrativo",
-        Question: "¿En qué supuestos se requiere la autorización previa de las Cortes Generales para que el Estado pueda obligarse por medio de tratados internacionales?",
-        Answer: "Se necesita autorización previa de las Cortes Generales para tratados: políticos, militares, que afecten a la integridad territorial, derechos fundamentales, impliquen obligaciones financieras o modifiquen leyes.",
-        Reasoning: "La autorización previa garantiza el control parlamentario sobre los compromisos internacionales más importantes. Así, el Estado no puede firmar tratados clave sin el visto bueno de las Cortes.",
-        Legal_Reference: "Constitución Española, artículo 94",
-        Reminder: "PoMiTeDeFiLe (Político, Militar, Territorial, Derechos, Financieros, Leyes). Para temas sensibles, siempre se necesita permiso del Parlamento",
-        Keywords: ["autorización", "Cortes Generales", "tratados"]
-    },
-    {
-        ID: 4,
-        Category: "administrativo",
-        Question: "¿Qué significa la inderogabilidad singular de los reglamentos?",
-        Answer: "La inderogabilidad singular significa que un reglamento no puede ser anulado o dejado sin efecto por un acto administrativo individual, salvo que una ley lo permita.",
-        Reasoning: "Este principio asegura que las normas generales se apliquen igual para todos y no se hagan excepciones arbitrarias. Así se protege la estabilidad y la igualdad en la aplicación de los reglamentos.",
-        Legal_Reference: "Ley 39/2015, artículo 37",
-        Reminder: "Es como una regla general que no puede romperse para casos concretos, salvo permiso especial. Las reglas generales no se rompen para casos individuales",
-        Keywords: ["inderogabilidad", "reglamento", "acto singular"]
-    },
-    {
-        ID: 5,
-        Category: "administrativo",
-        Question: "¿A qué órganos corresponde la potestad reglamentaria según la Ley 39/2015? ¿Pueden tipificar delitos o faltas?",
-        Answer: "La potestad reglamentaria corresponde al Gobierno, a los órganos de las comunidades autónomas y a las entidades locales. No pueden crear delitos ni faltas, solo pueden establecer infracciones administrativas si la ley lo permite.",
-        Reasoning: "La potestad reglamentaria está limitada para evitar que los reglamentos invadan materias reservadas a la ley, como el Derecho Penal. Así, solo la ley puede crear delitos o faltas.",
-        Legal_Reference: "Ley 39/2015, artículo 128",
-        Reminder: "Go-Co-Lo (Gobierno, Comunidades, Locales). Los reglamentos solo pueden regular lo que la ley les permite",
-        Keywords: ["potestad reglamentaria", "órganos", "delitos", "infracciones"]
-    },
-    {
-        ID: 6,
-        Category: "administrativo",
-        Question: "Defina órgano administrativo según el artículo 5 de la Ley 40/2015.",
-        Answer: "Un órgano administrativo es una unidad de la Administración que tiene funciones y atribuciones para tomar decisiones que producen efectos jurídicos frente a terceros o cuya actuación es obligatoria.",
-        Reasoning: "La definición se basa en la función y capacidad para producir efectos legales, no en el nombre. Es importante entender que cualquier unidad con estas características es un órgano administrativo.",
-        Legal_Reference: "Ley 40/2015, artículo 5",
-        Reminder: "Piensa en él como la 'mano' que actúa en nombre de la Administración",
-        Keywords: ["órgano", "funciones", "efectos jurídicos", "actuación preceptiva"]
-    },
-    {
-        ID: 7,
-        Category: "administrativo",
-        Question: "En relación con la competencia de los órganos administrativos: a) La encomienda de gestión implica la transmisión de la titularidad de la competencia.",
-        Answer: "Falso. La encomienda de gestión solo delega la realización de tareas materiales o técnicas, pero la titularidad de la competencia permanece en el órgano que la posee.",
-        Reasoning: "La encomienda permite que un órgano realice funciones por otro sin perder la titularidad de la competencia, garantizando responsabilidad y control. Es como pedir ayuda sin ceder el mando.",
-        Legal_Reference: "Ley 40/2015, artículo 11",
-        Reminder: "Encomienda = encargo, no entrega",
-        Keywords: ["encomienda", "competencia", "delegación"]
-    },
-    {
-        ID: 8,
-        Category: "administrativo",
-        Question: "En relación con la competencia de los órganos administrativos: b) Tanto la delegación de competencias como la delegación de firma deben publicarse en los términos previstos en la ley.",
-        Answer: "Verdadero. La delegación de competencias y de firma debe ser publicada para garantizar transparencia y seguridad jurídica.",
-        Reasoning: "La publicación asegura que terceros conozcan quién tiene autoridad para actuar, evitando confusiones y garantizando la legalidad en la actuación administrativa.",
-        Legal_Reference: "Ley 40/2015, artículo 9",
-        Reminder: "Piensa en ello como anunciar quién puede actuar en nombre del órgano",
-        Keywords: ["delegación", "publicación", "transparencia"]
-    },
-    {
-        ID: 9,
-        Category: "administrativo",
-        Question: "En relación con la competencia de los órganos administrativos: c) La delegación de competencias puede ser revocada en cualquier momento por el órgano delegante.",
-        Answer: "Verdadero. El órgano que delega puede revocar la delegación en cualquier momento, recuperando así la competencia.",
-        Reasoning: "Esta facultad permite al órgano delegante mantener el control y corregir situaciones si considera que la delegación ya no es adecuada o conveniente.",
-        Legal_Reference: "Ley 40/2015, artículo 9",
-        Reminder: "El que da, puede quitar",
-        Keywords: ["delegación", "revocación", "competencia"]
-    },
-    {
-        ID: 10,
-        Category: "administrativo",
-        Question: "En relación con la competencia de los órganos administrativos: d) No cabe avocación cuando la delegación se ha realizado a favor de un órgano no dependiente jerárquicamente.",
-        Answer: "Verdadero. La avocación solo es posible entre órganos con relación jerárquica directa. No se puede avocar competencias delegadas a órganos independientes.",
-        Reasoning: "Esto evita interferencias indebidas y respeta la autonomía de órganos independientes, manteniendo el orden jerárquico en la Administración.",
-        Legal_Reference: "Ley 40/2015, artículo 10",
-        Reminder: "Avocación requiere jerarquía directa",
-        Keywords: ["avocación", "jerarquía", "dependencia"]
-    },
-    {
-        ID: 11,
-        Category: "administrativo",
-        Question: "¿Qué es un organismo autónomo según la Ley 6/2006, disp. adic. 7ª?",
-        Answer: "Un organismo autónomo es una entidad pública con personalidad jurídica propia, patrimonio propio y autonomía de gestión, destinada a actividades de fomento o gestión de servicios públicos.",
-        Reasoning: "Los organismos autónomos permiten descentralizar funciones y gestionar servicios con mayor flexibilidad, facilitando la eficiencia administrativa.",
-        Legal_Reference: "Ley 6/2006, disposición adicional 7ª",
-        Reminder: "Piensa en él como una 'mini Administración' con autonomía",
-        Keywords: ["organismo autónomo", "personalidad jurídica", "autonomía", "patrimonio"]
-    },
-    {
-        ID: 12,
-        Category: "administrativo",
-        Question: "¿Qué es una sociedad mercantil pública en Canarias?",
-        Answer: "Es una empresa en la que la Administración o sus organismos tienen la mayoría del capital social o el control efectivo.",
-        Reasoning: "Estas sociedades permiten a la Administración intervenir en sectores estratégicos o de interés público mediante fórmulas mercantiles, combinando gestión empresarial y control público.",
-        Legal_Reference: "Ley 6/2006, disposición adicional 7ª",
-        Reminder: "Es como una empresa privada, pero controlada por la Administración",
-        Keywords: ["sociedad mercantil pública", "capital público", "control"]
-    },
-    {
-        ID: 13,
-        Category: "administrativo",
-        Question: "¿Qué es la publicidad activa en la Ley 19/2013?",
-        Answer: "La publicidad activa es la obligación de la Administración de difundir información relevante sin que nadie la solicite.",
-        Reasoning: "Garantiza la transparencia y el control ciudadano sobre la gestión pública, fomentando la confianza y la participación.",
-        Legal_Reference: "Ley 19/2013, artículo 5",
-        Reminder: "Piensa en ello como 'informar antes de que pregunten'",
-        Keywords: ["publicidad activa", "transparencia", "información"]
-    },
-    {
-        ID: 14,
-        Category: "administrativo",
-        Question: "¿Cuáles son los principios técnicos del Portal de Transparencia según el art. 11 de la Ley 19/2013?",
-        Answer: "Los principios técnicos son: accesibilidad (fácil uso), interoperabilidad (funciona con otros sistemas), seguridad (protección de datos), identificación (control de accesos), disponibilidad (acceso continuo) y protección de datos personales (privacidad).",
-        Reasoning: "Estos principios aseguran que la información pública sea accesible, segura y respetuosa con la privacidad, facilitando el acceso y la confianza ciudadana.",
-        Legal_Reference: "Ley 19/2013, artículo 11",
-        Reminder: "AISI DP (Accesibilidad, Interoperabilidad, Seguridad, Identificación, Disponibilidad, Protección datos)",
-        Keywords: ["accesibilidad", "seguridad", "privacidad"]
-    },
-    {
-        ID: 15,
-        Category: "administrativo",
-        Question: "¿Quiénes están obligados a relacionarse electrónicamente con la Administración según el art. 14.2 de la Ley 39/2015?",
-        Answer: "Deben usar medios electrónicos: personas jurídicas (empresas), entidades sin personalidad jurídica, profesionales colegiados, notarios, registradores y representantes de sujetos obligados.",
-        Reasoning: "Esta obligación agiliza los trámites y mejora la eficiencia administrativa, facilitando la comunicación y reduciendo tiempos.",
-        Legal_Reference: "Ley 39/2015, artículo 14",
-        Reminder: "JENPR (Jurídicas, Entidades, Notarios, Profesionales, Representantes)",
-        Keywords: ["obligación", "relación electrónica", "sujetos obligados"]
-    },
-    {
-        ID: 16,
-        Category: "administrativo",
-        Question: "¿Qué es la sede electrónica según el art. 38 de la Ley 39/2015?",
-        Answer: "Es la dirección electrónica oficial de una Administración, órgano o entidad para relacionarse electrónicamente con los ciudadanos.",
-        Reasoning: "Centraliza y da seguridad jurídica a los trámites electrónicos, facilitando el acceso y la gestión administrativa digital.",
-        Legal_Reference: "Ley 39/2015, artículo 38",
-        Reminder: "Piensa en ella como la 'oficina virtual' de la Administración",
-        Keywords: ["sede electrónica", "relación electrónica", "Administración"]
-    },
-    {
-        ID: 17,
-        Category: "administrativo",
-        Question: "V/F: La notificación electrónica es preferente salvo que el interesado no esté obligado y no haya optado por medios electrónicos.",
-        Answer: "Verdadero. La notificación electrónica es la regla general para garantizar rapidez y trazabilidad, salvo excepciones legales.",
-        Reasoning: "Favorece la eficiencia y seguridad en la comunicación administrativa, asegurando que las notificaciones lleguen de forma rápida y comprobable.",
-        Legal_Reference: "Ley 39/2015, artículo 41",
-        Reminder: "Notificación electrónica = preferente",
-        Keywords: ["notificación electrónica", "preferente", "excepción"]
-    },
-    {
-        ID: 18,
-        Category: "administrativo",
-        Question: "¿Qué efectos produce el silencio administrativo según el art. 24 de la Ley 39/2015?",
-        Answer: "El silencio administrativo puede ser estimatorio o desestimatorio según la materia y normativa aplicable.",
-        Reasoning: "Protege al ciudadano frente a la inactividad administrativa, permitiendo avanzar o concluir el procedimiento cuando la Administración no responde.",
-        Legal_Reference: "Ley 39/2015, artículo 24",
-        Reminder: "El efecto depende del tipo de procedimiento",
-        Keywords: ["silencio administrativo", "estimatorio", "desestimatorio"]
-    },
-    {
-        ID: 19,
-        Category: "administrativo",
-        Question: "¿Qué actos administrativos deben ser motivados según el art. 35.1 de la Ley 39/2015?",
-        Answer: "Deben ser motivados los actos que resuelven procedimientos, declaran inadmisión, imponen sanciones o limitan derechos, entre otros.",
-        Reasoning: "La motivación garantiza la transparencia y el derecho de defensa, explicando las razones y fundamentos de las decisiones administrativas.",
-        Legal_Reference: "Ley 39/2015, artículo 35",
-        Reminder: "Motivar para explicar y justificar",
-        Keywords: ["motivación", "actos administrativos", "transparencia"]
-    },
-    {
-        ID: 20,
-        Category: "administrativo",
-        Question: "V/F: El silencio administrativo siempre es estimatorio.",
-        Answer: "Falso. El sentido del silencio depende de la materia; puede ser desestimatorio en procedimientos sancionadores o de acceso a la función pública.",
-        Reasoning: "Es importante conocer el contexto para interpretar correctamente el silencio administrativo y sus efectos legales.",
-        Legal_Reference: "Ley 39/2015, artículo 24",
-        Reminder: "Silencio no siempre significa aceptación",
-        Keywords: ["silencio administrativo", "estimatorio", "desestimatorio"]
-    },
-    {
-        ID: 21,
-        Category: "administrativo",
-        Question: "¿Qué condiciones de aptitud exige el art. 65 de la Ley 9/2017 para contratar con el sector público?",
-        Answer: "Se exige capacidad de obrar, no estar incurso en prohibiciones, cumplir obligaciones fiscales y de seguridad social, y acreditar solvencia técnica y económica.",
-        Reasoning: "Estas condiciones aseguran que solo empresas fiables y solventes puedan contratar con la Administración, garantizando calidad y legalidad.",
-        Legal_Reference: "Ley 9/2017, artículo 65",
-        Reminder: "Aptitud = capacidad + cumplimiento",
-        Keywords: ["aptitud", "capacidad", "solvencia", "prohibiciones"]
-    },
-    {
-        ID: 22,
-        Category: "administrativo",
-        Question: "¿Qué supone la lucha contra la corrupción según el art. 64 de la Ley 9/2017?",
-        Answer: "Obliga a declarar conflictos de interés y establece controles de integridad en la contratación pública para prevenir prácticas corruptas.",
-        Reasoning: "La prevención de la corrupción es esencial para la transparencia y la confianza en la contratación pública, protegiendo el interés general.",
-        Legal_Reference: "Ley 9/2017, artículo 64",
-        Reminder: "Integridad = transparencia + control",
-        Keywords: ["corrupción", "conflictos de interés", "integridad"]
-    },
-    {
-        ID: 23,
-        Category: "administrativo",
-        Question: "¿Qué es el presupuesto base de licitación?",
-        Answer: "Es el importe máximo que la Administración está dispuesta a pagar por la ejecución del contrato.",
-        Reasoning: "Sirve de referencia para las ofertas y garantiza la transparencia y control en el proceso de contratación.",
-        Legal_Reference: "Ley 9/2017, artículo 100",
-        Reminder: "Presupuesto base = techo económico",
-        Keywords: ["presupuesto base", "importe máximo", "licitación"]
-    },
-    {
-        ID: 24,
-        Category: "administrativo",
-        Question: "¿Qué es el valor estimado del contrato?",
-        Answer: "Es el importe total previsto del contrato, incluyendo posibles prórrogas y modificaciones.",
-        Reasoning: "Permite calcular los umbrales de aplicación de la normativa y comparar ofertas de forma objetiva y justa.",
-        Legal_Reference: "Ley 9/2017, artículo 101",
-        Reminder: "Valor estimado = coste total previsto",
-        Keywords: ["valor estimado", "importe total", "contrato"]
-    },
-    {
-        ID: 25,
-        Category: "administrativo",
-        Question: "¿Qué es el precio del contrato?",
-        Answer: "Es el importe final acordado tras la adjudicación y ejecución del contrato.",
-        Reasoning: "Refleja el coste real para la Administración y puede ser inferior al presupuesto base de licitación.",
-        Legal_Reference: "Ley 9/2017, artículo 102",
-        Reminder: "Precio = coste real",
-        Keywords: ["precio", "importe final", "contrato"]
-    },
-    {
-        ID: 26,
-        Category: "administrativo",
-        Question: "¿Qué es la división en lotes de los contratos?",
-        Answer: "Es la posibilidad de dividir un contrato en partes independientes para facilitar la concurrencia de pequeñas y medianas empresas.",
-        Reasoning: "Fomenta la competencia y el acceso de empresas de menor tamaño a la contratación pública, aumentando la pluralidad de ofertas.",
-        Legal_Reference: "Ley 9/2017, artículo 99",
-        Reminder: "Lotes = contratos pequeños para pymes",
-        Keywords: ["división en lotes", "contratos", "pymes"]
-    },
-    {
-        ID: 27,
-        Category: "administrativo",
-        Question: "¿Qué es el Registro Oficial de Licitadores y Empresas Clasificadas del Sector Público?",
-        Answer: "Es un registro administrativo donde se inscriben empresas aptas para contratar con el sector público, facilitando transparencia y competencia.",
-        Reasoning: "Agiliza los procedimientos de contratación y garantiza la idoneidad y solvencia de los licitadores.",
-        Legal_Reference: "Ley 9/2017, artículo 337",
-        Reminder: "Registro = filtro de calidad",
-        Keywords: ["registro", "licitadores", "transparencia"]
-    },
-    {
-        ID: 28,
-        Category: "administrativo",
-        Question: "¿Qué es el procedimiento de licitación con negociación?",
-        Answer: "Es un procedimiento en el que la Administración negocia con los licitadores aspectos técnicos o económicos antes de adjudicar el contrato.",
-        Reasoning: "Permite adaptar el contrato a las necesidades y obtener mejores condiciones para la Administración.",
-        Legal_Reference: "Ley 9/2017, artículo 167",
-        Reminder: "Negociar para mejorar",
-        Keywords: ["licitación", "negociación", "contrato"]
-    },
-    {
-        ID: 29,
-        Category: "administrativo",
-        Question: "¿Qué elementos del expediente de contratación deben justificarse adecuadamente?",
-        Answer: "La necesidad del contrato, la idoneidad de los medios, la valoración económica y la elección del procedimiento.",
-        Reasoning: "Garantiza la transparencia y la eficiencia en el uso de los recursos públicos, evitando arbitrariedades.",
-        Legal_Reference: "Ley 9/2017, artículo 116",
-        Reminder: "Justificar para legitimar",
-        Keywords: ["expediente", "justificación", "contratación"]
-    },
-    {
-        ID: 30,
-        Category: "administrativo",
-        Question: "V/F: El presupuesto base de licitación es el importe final acordado tras la adjudicación.",
-        Answer: "Falso. El presupuesto base es el máximo que la Administración está dispuesta a pagar; el precio final puede ser inferior.",
-        Reasoning: "Distinguir entre presupuesto base y precio final es clave para entender la contratación pública y evitar confusiones.",
-        Legal_Reference: "Ley 9/2017, artículo 100",
-        Reminder: "Base ≠ precio final",
-        Keywords: ["presupuesto base", "importe máximo", "precio final"]
-    },
-    {
-        ID: 31,
-        Category: "administrativo",
-        Question: "¿Qué requisitos exige el art. 32.5 de la Ley 40/2015 para indemnizar por norma contraria al Derecho de la UE?",
-        Answer: "Se requiere declaración judicial de contrariedad, daño directo y reclamación en plazo.",
-        Reasoning: "Estos requisitos garantizan que solo se indemnice cuando hay una clara vulneración del Derecho de la UE y un daño real, protegiendo la seguridad jurídica.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Juicio + daño + plazo",
-        Keywords: ["indemnización", "Derecho UE", "requisitos"]
-    },
-    {
-        ID: 32,
-        Category: "administrativo",
-        Question: "¿Qué principios rigen la responsabilidad patrimonial de la Administración?",
-        Answer: "Legalidad, causalidad, indemnidad y proporcionalidad.",
-        Reasoning: "Estos principios aseguran que la Administración solo responde por daños reales, directos y conforme a la ley, garantizando justicia y equilibrio.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Ley + causa + reparación justa",
-        Keywords: ["principios", "responsabilidad patrimonial"]
-    },
-    {
-        ID: 33,
-        Category: "administrativo",
-        Question: "¿Qué es la responsabilidad patrimonial de la Administración?",
-        Answer: "Es la obligación de indemnizar a los particulares por daños causados por el funcionamiento normal o anormal de los servicios públicos.",
-        Reasoning: "Protege los derechos de los ciudadanos frente a daños causados por la Administración, asegurando reparación justa.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Daño + reparación",
-        Keywords: ["responsabilidad patrimonial", "indemnización", "daños"]
-    },
-    {
-        ID: 34,
-        Category: "administrativo",
-        Question: "¿Qué es el nexo causal en la responsabilidad patrimonial?",
-        Answer: "Es la relación directa entre la actuación administrativa y el daño sufrido por el particular.",
-        Reasoning: "Es imprescindible para que exista responsabilidad y se conceda indemnización, conectando causa y efecto.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Causa y efecto",
-        Keywords: ["nexo causal", "responsabilidad"]
-    },
-    {
-        ID: 35,
-        Category: "administrativo",
-        Question: "¿Qué es la indemnidad en la responsabilidad patrimonial?",
-        Answer: "Es el derecho del perjudicado a ser resarcido íntegramente por el daño sufrido, sin enriquecimiento injusto.",
-        Reasoning: "Garantiza que la reparación cubra todo el daño, pero sin excederlo, manteniendo la equidad.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Indemnidad = cubrir daño sin lucro",
-        Keywords: ["indemnidad", "reparación", "daño"]
-    },
-    {
-        ID: 36,
-        Category: "administrativo",
-        Question: "¿Qué es la prescripción en la responsabilidad patrimonial?",
-        Answer: "Es la extinción del derecho a reclamar por el transcurso del tiempo sin ejercitar la acción.",
-        Reasoning: "Aporta seguridad jurídica y evita reclamaciones indefinidas contra la Administración.",
-        Legal_Reference: "Ley 40/2015, artículo 67",
-        Reminder: "Tiempo límite para reclamar",
-        Keywords: ["prescripción", "extinción", "reclamación"]
-    },
-    {
-        ID: 37,
-        Category: "administrativo",
-        Question: "¿Qué es la concurrencia de culpas en la responsabilidad patrimonial?",
-        Answer: "Situación en la que el perjudicado ha contribuido al daño, lo que puede reducir la indemnización.",
-        Reasoning: "Permite ajustar la indemnización a la responsabilidad real de cada parte, promoviendo justicia.",
-        Legal_Reference: "Ley 40/2015, artículo 34",
-        Reminder: "Culpa compartida, indemnización ajustada",
-        Keywords: ["concurrencia de culpas", "reducción", "indemnización"]
-    },
-    {
-        ID: 38,
-        Category: "administrativo",
-        Question: "¿Qué es la responsabilidad solidaria de las Administraciones Públicas?",
-        Answer: "Obligación de varias Administraciones de responder conjuntamente por un mismo daño.",
-        Reasoning: "Garantiza la reparación del daño aunque intervengan varias Administraciones, asegurando protección al perjudicado.",
-        Legal_Reference: "Ley 40/2015, artículo 33",
-        Reminder: "Todos responden juntos",
-        Keywords: ["responsabilidad solidaria", "Administraciones", "daño"]
-    },
-    {
-        ID: 39,
-        Category: "administrativo",
-        Question: "¿Qué es la responsabilidad subsidiaria de la Administración?",
-        Answer: "Obligación de una Administración de responder solo si la principal no lo hace.",
-        Reasoning: "Asegura que el perjudicado reciba la indemnización aunque la Administración principal no cumpla.",
-        Legal_Reference: "Ley 40/2015, artículo 33",
-        Reminder: "Respaldo subsidiario",
-        Keywords: ["responsabilidad subsidiaria", "obligación"]
-    },
-    {
-        ID: 40,
-        Category: "administrativo",
-        Question: "V/F: La Administración solo responde por daños causados por normas con rango de ley.",
-        Answer: "Falso. La Administración responde por daños causados por cualquier actuación administrativa, no solo por normas con rango de ley.",
-        Reasoning: "Es fundamental entender que la responsabilidad es amplia y cubre todas las actuaciones administrativas que causen daño.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Responsabilidad amplia",
-        Keywords: ["responsabilidad", "daños", "actuación administrativa"]
-    },
-    {
-        ID: 41,
-        Category: "administrativo",
-        Question: "¿Qué son los bienes de dominio público según el art. 5 de la Ley 33/2003?",
-        Answer: "Bienes y derechos de las Administraciones Públicas destinados al uso público o servicios públicos, inalienables, imprescriptibles e inembargables.",
-        Reasoning: "Estos bienes están especialmente protegidos para garantizar su uso y conservación para el interés general.",
-        Legal_Reference: "Ley 33/2003, artículo 5",
-        Reminder: "Bienes públicos = protección máxima",
-        Keywords: ["bienes de dominio público", "uso público", "protección"]
-    },
-    {
-        ID: 42,
-        Category: "administrativo",
-        Question: "¿Qué tipos de uso del dominio público existen según el art. 85 de la Ley 33/2003?",
-        Answer: "Uso general (para todos) y uso especial (requiere autorización).",
-        Reasoning: "La distinción regula el acceso y uso de los bienes públicos de forma equitativa y ordenada.",
-        Legal_Reference: "Ley 33/2003, artículo 85",
-        Reminder: "Uso general = todos; uso especial = autorización",
-        Keywords: ["uso general", "uso especial", "dominio público"]
-    },
-    {
-        ID: 43,
-        Category: "administrativo",
-        Question: "¿Qué son los bienes patrimoniales de la Administración?",
-        Answer: "Son los bienes y derechos de la Administración no destinados al uso público ni a servicios públicos.",
-        Reasoning: "Pueden ser enajenados y gestionados conforme al derecho privado, salvo disposición legal en contrario.",
-        Legal_Reference: "Ley 33/2003, artículo 6",
-        Reminder: "Bienes patrimoniales = uso privado",
-        Keywords: ["bienes patrimoniales", "Administración", "uso privado"]
-    },
-    {
-        ID: 44,
-        Category: "administrativo",
-        Question: "¿Qué es la afectación de un bien al dominio público?",
-        Answer: "Acto administrativo por el que un bien pasa a estar destinado al uso o servicio público.",
-        Reasoning: "Garantiza la protección y el uso adecuado de los bienes públicos para el interés general.",
-        Legal_Reference: "Ley 33/2003, artículo 68",
-        Reminder: "Afectar = destinar a uso público",
-        Keywords: ["afectación", "dominio público", "bien"]
-    },
-    {
-        ID: 45,
-        Category: "administrativo",
-        Question: "¿Qué es la desafectación de un bien de dominio público?",
-        Answer: "Acto administrativo por el que un bien deja de estar destinado al uso o servicio público y pasa a ser patrimonial.",
-        Reasoning: "Permite adaptar el patrimonio público a las necesidades cambiantes de la Administración.",
-        Legal_Reference: "Ley 33/2003, artículo 71",
-        Reminder: "Desafectar = quitar del uso público",
-        Keywords: ["desafectación", "dominio público", "bien patrimonial"]
-    },
-    {
-        ID: 46,
-        Category: "administrativo",
-        Question: "¿Qué es la reversión de un bien expropiado?",
-        Answer: "Derecho del expropiado a recuperar el bien si no se destina al fin público previsto o se desiste de la expropiación.",
-        Reasoning: "Protege los derechos de los expropiados y evita abusos en la utilización de la expropiación.",
-        Legal_Reference: "Ley de Expropiación Forzosa, artículo 54",
-        Reminder: "Reversión = devolver si no se usa",
-        Keywords: ["reversión", "expropiación", "derecho"]
-    },
-    {
-        ID: 47,
-        Category: "administrativo",
-        Question: "¿Qué es la ocupación temporal de bienes de dominio público?",
-        Answer: "Utilización provisional de bienes públicos por particulares, autorizada por la Administración.",
-        Reasoning: "Permite compatibilizar el uso público con necesidades privadas puntuales, bajo control administrativo.",
-        Legal_Reference: "Ley 33/2003, artículo 90",
-        Reminder: "Ocupación temporal = uso provisional autorizado",
-        Keywords: ["ocupación temporal", "bienes públicos", "autorización"]
-    },
-    {
-        ID: 48,
-        Category: "administrativo",
-        Question: "¿Qué es la concesión administrativa sobre bienes de dominio público?",
-        Answer: "Acto por el que la Administración otorga a un particular el uso privativo de un bien público por un tiempo determinado.",
-        Reasoning: "Permite aprovechar los bienes públicos para actividades privadas de interés general, bajo supervisión.",
-        Legal_Reference: "Ley 33/2003, artículo 93",
-        Reminder: "Concesión = uso privativo temporal",
-        Keywords: ["concesión administrativa", "uso privativo", "bienes públicos"]
-    },
-    {
-        ID: 49,
-        Category: "administrativo",
-        Question: "¿Qué es la autorización administrativa sobre bienes de dominio público?",
-        Answer: "Acto por el que la Administración permite el uso especial de un bien público sin exclusividad ni duración prolongada.",
-        Reasoning: "Facilita el uso racional y controlado de los bienes públicos, sin ceder derechos exclusivos.",
-        Legal_Reference: "Ley 33/2003, artículo 92",
-        Reminder: "Autorización = uso especial sin exclusividad",
-        Keywords: ["autorización administrativa", "uso especial", "bienes públicos"]
-    },
-    {
-        ID: 50,
-        Category: "administrativo",
-        Question: "V/F: Los bienes de dominio público son inalienables, imprescriptibles e inembargables.",
-        Answer: "Verdadero. Estas características protegen el patrimonio público y garantizan su conservación para el interés general.",
-        Reasoning: "Estas cualidades aseguran que los bienes públicos se mantengan disponibles para todos y no puedan ser apropiados o embargados.",
-        Legal_Reference: "Ley 33/2003, artículo 7",
-        Reminder: "Triple protección: no se venden, no prescriben, no se embargan",
-        Keywords: ["inalienables", "imprescriptibles", "inembargables"]
-    },
-    {
-        ID: 51,
-        Category: "administrativo",
-        Question: "¿Qué es la información pública en el procedimiento administrativo?",
-        Answer: "Es el periodo en que cualquier persona puede examinar el expediente y presentar alegaciones.",
-        Reasoning: "Permite la participación ciudadana y la transparencia en la toma de decisiones administrativas.",
-        Legal_Reference: "Ley 39/2015, artículo 83",
-        Reminder: "Información pública = participación ciudadana",
-        Keywords: ["información pública", "participación", "alegaciones"]
-    },
-    {
-        ID: 52,
-        Category: "administrativo",
-        Question: "¿Qué es la subsanación y mejora de la solicitud?",
-        Answer: "Permite corregir defectos o aportar documentación tras requerimiento de la Administración.",
-        Reasoning: "Evita la inadmisión de solicitudes por defectos formales y garantiza el derecho a la tramitación.",
-        Legal_Reference: "Ley 39/2015, artículo 68",
-        Reminder: "Subsanar = corregir errores",
-        Keywords: ["subsanación", "mejora", "solicitud"]
-    },
-    {
-        ID: 53,
-        Category: "administrativo",
-        Question: "¿Qué es la terminación convencional del procedimiento administrativo?",
-        Answer: "Finalización del procedimiento mediante acuerdo entre la Administración y los interesados.",
-        Reasoning: "Fomenta la resolución consensuada y reduce la litigiosidad, agilizando la gestión administrativa.",
-        Legal_Reference: "Ley 39/2015, artículo 86",
-        Reminder: "Terminación convencional = acuerdo mutuo",
-        Keywords: ["terminación convencional", "acuerdo", "procedimiento"]
-    },
-    {
-        ID: 54,
-        Category: "administrativo",
-        Question: "¿Qué es la renuncia y el desistimiento en el procedimiento administrativo?",
-        Answer: "La renuncia es la declaración del interesado de abandonar su derecho; el desistimiento es la retirada de la solicitud o recurso.",
-        Reasoning: "Permiten al interesado poner fin al procedimiento por voluntad propia, respetando su autonomía.",
-        Legal_Reference: "Ley 39/2015, artículo 94",
-        Reminder: "Renuncia = abandonar derecho; Desistimiento = retirar solicitud",
-        Keywords: ["renuncia", "desistimiento", "procedimiento"]
-    },
-    {
-        ID: 55,
-        Category: "administrativo",
-        Question: "¿Qué es la caducidad del procedimiento administrativo?",
-        Answer: "Extinción del procedimiento por inactividad de la Administración o del interesado durante el plazo legalmente previsto.",
-        Reasoning: "Protege al ciudadano frente a la inactividad administrativa y fomenta la eficiencia en la gestión.",
-        Legal_Reference: "Ley 39/2015, artículo 95",
-        Reminder: "Caducidad = extinción por inactividad",
-        Keywords: ["caducidad", "inactividad", "procedimiento"]
-    },
-    {
-        ID: 56,
-        Category: "administrativo",
-        Question: "¿Qué es la prescripción en el procedimiento administrativo?",
-        Answer: "La prescripción es la extinción de derechos o acciones por no ejercerse dentro del tiempo legal establecido.",
-        Reasoning: "La prescripción aporta seguridad jurídica al evitar reclamaciones eternas y obliga a actuar dentro de plazos razonables.",
-        Legal_Reference: "Ley 39/2015, artículo 30",
-        Reminder: "Piensa en ella como un reloj que marca el límite para actuar. Tiempo + acción = derecho vigente",
-        Keywords: ["prescripción", "extinción", "plazo"]
-    },
-    {
-        ID: 57,
-        Category: "administrativo",
-        Question: "¿Qué es la revisión de oficio de los actos administrativos?",
-        Answer: "Es el procedimiento por el que la Administración puede anular o modificar sus propios actos cuando son contrarios a derecho, ya sea por iniciativa propia o a petición de interesados.",
-        Reasoning: "Garantiza la legalidad y protege los derechos de los ciudadanos corrigiendo errores administrativos.",
-        Legal_Reference: "Ley 39/2015, artículo 106",
-        Reminder: "La Administración puede corregirse a sí misma",
-        Keywords: ["revisión de oficio", "anulación", "modificación"]
-    },
-    {
-        ID: 58,
-        Category: "administrativo",
-        Question: "¿Qué es el recurso de alzada?",
-        Answer: "Recurso ordinario contra actos que no ponen fin a la vía administrativa, presentado ante el órgano superior jerárquico.",
-        Reasoning: "Permite que un órgano superior revise decisiones para corregir posibles errores.",
-        Legal_Reference: "Ley 39/2015, artículo 121",
-        Reminder: "Subir un escalón para revisar",
-        Keywords: ["recurso de alzada", "revisión", "órgano superior"]
-    },
-    {
-        ID: 59,
-        Category: "administrativo",
-        Question: "¿Qué es el recurso de reposición?",
-        Answer: "Recurso potestativo contra actos que ponen fin a la vía administrativa, presentado ante el mismo órgano que dictó el acto.",
-        Reasoning: "Ofrece una segunda oportunidad para revisar la decisión sin acudir a la vía judicial.",
-        Legal_Reference: "Ley 39/2015, artículo 123",
-        Reminder: "Pedir al mismo órgano que revise",
-        Keywords: ["recurso de reposición", "revisión", "mismo órgano"]
-    },
-    {
-        ID: 60,
-        Category: "administrativo",
-        Question: "¿Qué es el recurso extraordinario de revisión?",
-        Answer: "Recurso contra actos firmes por error de hecho, aparición de documentos esenciales o falsedad de pruebas.",
-        Reasoning: "Permite corregir injusticias graves que no pudieron ser revisadas antes.",
-        Legal_Reference: "Ley 39/2015, artículo 125",
-        Reminder: "Recurso para casos excepcionales",
-        Keywords: ["recurso extraordinario", "revisión", "error", "falsedad"]
-    },
-    {
-        ID: 61,
-        Category: "administrativo",
-        Question: "¿Qué es la nulidad de pleno derecho de un acto administrativo?",
-        Answer: "Situación en la que un acto es inválido desde su origen por vulnerar gravemente el ordenamiento jurídico.",
-        Reasoning: "Protege el principio de legalidad y los derechos fundamentales frente a actos gravemente ilegales.",
-        Legal_Reference: "Ley 39/2015, artículo 47",
-        Reminder: "Acto nulo = sin efectos desde el principio",
-        Keywords: ["nulidad", "invalidez", "origen", "ilegalidad"]
-    },
-    {
-        ID: 62,
-        Category: "administrativo",
-        Question: "¿Qué es la anulabilidad de un acto administrativo?",
-        Answer: "Defecto no esencial que permite impugnar y anular el acto, pero que produce efectos mientras no se anule.",
-        Reasoning: "Permite corregir errores sin afectar la seguridad jurídica mientras el acto no sea anulado.",
-        Legal_Reference: "Ley 39/2015, artículo 48",
-        Reminder: "Acto anulable = válido hasta que se anule",
-        Keywords: ["anulabilidad", "defecto", "impugnación"]
-    },
-    {
-        ID: 63,
-        Category: "administrativo",
-        Question: "¿Qué es la convalidación de un acto administrativo?",
-        Answer: "Subsanación de vicios no esenciales para que el acto sea válido y eficaz desde su origen.",
-        Reasoning: "Evita repetir trámites y protege la eficacia administrativa.",
-        Legal_Reference: "Ley 39/2015, artículo 52",
-        Reminder: "Corregir errores para validar el acto",
-        Keywords: ["convalidación", "subsanación", "validez"]
-    },
-    {
-        ID: 64,
-        Category: "administrativo",
-        Question: "¿Qué es la ejecutoriedad del acto administrativo?",
-        Answer: "Facultad de la Administración para ejecutar sus actos, incluso contra la voluntad del destinatario, salvo suspensión legal.",
-        Reasoning: "Permite cumplir los fines administrativos sin necesidad de acudir a tribunales.",
-        Legal_Reference: "Ley 39/2015, artículo 98",
-        Reminder: "Acto ejecutable = acción inmediata",
-        Keywords: ["ejecutoriedad", "ejecución", "obligatoriedad"]
-    },
-    {
-        ID: 65,
-        Category: "administrativo",
-        Question: "¿Qué es la eficacia del acto administrativo?",
-        Answer: "Capacidad del acto para producir efectos jurídicos desde su notificación o publicación.",
-        Reasoning: "Marca el momento en que el acto comienza a surtir efectos y puede ser ejecutado.",
-        Legal_Reference: "Ley 39/2015, artículo 39",
-        Reminder: "Eficacia = momento de validez práctica",
-        Keywords: ["eficacia", "efectos jurídicos", "notificación"]
-    },
-    {
-        ID: 66,
-        Category: "administrativo",
-        Question: "¿Qué es la publicación del acto administrativo?",
-        Answer: "Difusión del acto en un medio oficial para conocimiento general, cuando la ley o la naturaleza del acto lo exijan.",
-        Reasoning: "Asegura la transparencia y la eficacia general de los actos administrativos.",
-        Legal_Reference: "Ley 39/2015, artículo 45",
-        Reminder: "Publicar para informar a todos",
-        Keywords: ["publicación", "difusión", "transparencia"]
-    },
-    {
-        ID: 67,
-        Category: "administrativo",
-        Question: "¿Qué es la notificación del acto administrativo?",
-        Answer: "Comunicación formal al interesado del contenido de un acto administrativo, con indicación de recursos y plazos.",
-        Reasoning: "Garantiza el derecho de defensa y la eficacia del acto administrativo.",
-        Legal_Reference: "Ley 39/2015, artículo 40",
-        Reminder: "Notificar para que se sepa y pueda actuar",
-        Keywords: ["notificación", "comunicación", "derecho de defensa"]
-    },
-    {
-        ID: 68,
-        Category: "administrativo",
-        Question: "¿Qué actos administrativos deben ser motivados según el art. 35.1 de la Ley 39/2015?",
-        Answer: "Los que resuelven procedimientos, declaran inadmisión, imponen sanciones o limitan derechos, entre otros.",
-        Reasoning: "La motivación garantiza que las decisiones sean claras y justificadas, facilitando el control y la impugnación.",
-        Legal_Reference: "Ley 39/2015, artículo 35",
-        Reminder: "Motivar para explicar y justificar",
-        Keywords: ["motivación", "transparencia", "derecho de defensa"]
-    },
-    {
-        ID: 69,
-        Category: "administrativo",
-        Question: "¿Qué efectos produce el silencio administrativo según el art. 24 de la Ley 39/2015?",
-        Answer: "Puede ser estimatorio o desestimatorio según la materia y normativa aplicable.",
-        Reasoning: "Protege al ciudadano frente a la inactividad administrativa, permitiendo avanzar o concluir el procedimiento.",
-        Legal_Reference: "Ley 39/2015, artículo 24",
-        Reminder: "Silencio con efecto según contexto",
-        Keywords: ["silencio administrativo", "estimatorio", "desestimatorio"]
-    },
-    {
-        ID: 70,
-        Category: "administrativo",
-        Question: "V/F: El silencio administrativo siempre es estimatorio.",
-        Answer: "Falso. El sentido del silencio depende de la materia; puede ser desestimatorio en procedimientos sancionadores o de acceso a la función pública.",
-        Reasoning: "Es clave conocer el contexto para interpretar correctamente el silencio administrativo y sus efectos legales.",
-        Legal_Reference: "Ley 39/2015, artículo 24",
-        Reminder: "Silencio no siempre significa aceptación",
-        Keywords: ["silencio administrativo", "estimatorio", "desestimatorio"]
-    },
-    {
-        ID: 71,
-        Category: "administrativo",
-        Question: "¿Son recurribles los actos de trámite? ¿En qué circunstancias y qué recursos pueden interponerse?",
-        Answer: "No son recurribles salvo que determinen la imposibilidad de continuar el procedimiento o causen indefensión; en ese caso, caben recurso de alzada o reposición.",
-        Reasoning: "Esta limitación evita paralizar procedimientos con recursos innecesarios, pero protege el derecho de defensa en casos excepcionales.",
-        Legal_Reference: "Ley 39/2015, artículo 112",
-        Reminder: "Recurso solo si afecta derechos",
-        Keywords: ["actos de trámite", "recurso", "indefensión"]
-    },
-    {
-        ID: 72,
-        Category: "administrativo",
-        Question: "¿Qué es el recurso de alzada?",
-        Answer: "Recurso ordinario contra actos que no ponen fin a la vía administrativa, ante el órgano superior jerárquico.",
-        Reasoning: "Permite que un órgano superior revise decisiones para corregir posibles errores.",
-        Legal_Reference: "Ley 39/2015, artículo 121",
-        Reminder: "Subir un escalón para revisar",
-        Keywords: ["recurso de alzada", "revisión", "órgano superior"]
-    },
-    {
-        ID: 73,
-        Category: "administrativo",
-        Question: "¿Qué es el recurso de reposición?",
-        Answer: "Recurso potestativo contra actos que ponen fin a la vía administrativa, ante el mismo órgano que dictó el acto.",
-        Reasoning: "Ofrece una segunda oportunidad para revisar la decisión sin acudir a la vía judicial.",
-        Legal_Reference: "Ley 39/2015, artículo 123",
-        Reminder: "Pedir al mismo órgano que revise",
-        Keywords: ["recurso de reposición", "revisión", "mismo órgano"]
-    },
-    {
-        ID: 74,
-        Category: "administrativo",
-        Question: "¿Qué es el recurso extraordinario de revisión?",
-        Answer: "Recurso contra actos firmes por error de hecho, aparición de documentos esenciales o falsedad de pruebas.",
-        Reasoning: "Permite corregir injusticias graves que no pudieron ser revisadas antes.",
-        Legal_Reference: "Ley 39/2015, artículo 125",
-        Reminder: "Recurso para casos excepcionales",
-        Keywords: ["recurso extraordinario", "revisión", "error", "falsedad"]
-    },
-    {
-        ID: 75,
-        Category: "administrativo",
-        Question: "¿Qué actos administrativos ponen fin a la vía administrativa?",
-        Answer: "Los que resuelven el procedimiento en su totalidad, desestiman recursos o declaran caducidad.",
-        Reasoning: "Conocer estos actos es esencial para determinar la vía impugnatoria correspondiente.",
-        Legal_Reference: "Ley 39/2015, artículo 114",
-        Reminder: "Fin de vía = acto definitivo",
-        Keywords: ["actos que ponen fin", "vía administrativa", "resolución"]
-    },
-    {
-        ID: 76,
-        Category: "administrativo",
-        Question: "¿Qué plazo hay para interponer el recurso de alzada?",
-        Answer: "Un mes desde la notificación del acto impugnado.",
-        Reasoning: "El plazo garantiza seguridad jurídica y agilidad en la revisión de actos administrativos.",
-        Legal_Reference: "Ley 39/2015, artículo 122",
-        Reminder: "Un mes para actuar",
-        Keywords: ["plazo", "recurso de alzada", "un mes"]
-    },
-    {
-        ID: 77,
-        Category: "administrativo",
-        Question: "¿Qué plazo hay para interponer el recurso de reposición?",
-        Answer: "Un mes desde la notificación del acto impugnado.",
-        Reasoning: "Permite una revisión rápida antes de acudir a la vía judicial.",
-        Legal_Reference: "Ley 39/2015, artículo 124",
-        Reminder: "Un mes para presentar reposición",
-        Keywords: ["plazo", "recurso de reposición", "un mes"]
-    },
-    {
-        ID: 78,
-        Category: "administrativo",
-        Question: "¿Qué plazo hay para interponer el recurso extraordinario de revisión?",
-        Answer: "Cuatro años desde la notificación del acto firme, salvo que se funde en falsedad, cuyo plazo es de tres meses desde el conocimiento.",
-        Reasoning: "Limita la revisión de actos firmes a supuestos excepcionales, protegiendo la seguridad jurídica.",
-        Legal_Reference: "Ley 39/2015, artículo 126",
-        Reminder: "Plazo largo pero con excepciones",
-        Keywords: ["plazo", "recurso extraordinario", "cuatro años"]
-    },
-    {
-        ID: 79,
-        Category: "administrativo",
-        Question: "V/F: El recurso de reposición es obligatorio antes de acudir a la vía judicial.",
-        Answer: "Falso. El recurso de reposición es potestativo; el interesado puede acudir directamente a la vía judicial.",
-        Reasoning: "Permite elegir la vía más conveniente sin obligación previa.",
-        Legal_Reference: "Ley 39/2015, artículo 123",
-        Reminder: "Reposición es opción, no requisito",
-        Keywords: ["recurso de reposición", "potestativo", "vía judicial"]
-    },
-    {
-        ID: 80,
-        Category: "administrativo",
-        Question: "¿Qué condiciones de aptitud exige el art. 65 de la Ley 9/2017 para contratar con el sector público?",
-        Answer: "Capacidad de obrar, no estar incurso en prohibiciones, cumplir obligaciones fiscales y de seguridad social, acreditar solvencia.",
-        Reasoning: "Garantizan que solo empresas fiables y solventes puedan contratar con la Administración.",
-        Legal_Reference: "Ley 9/2017, artículo 65",
-        Reminder: "Aptitud = capacidad + cumplimiento",
-        Keywords: ["aptitud", "capacidad", "solvencia"]
-    },
-    {
-        ID: 81,
-        Category: "administrativo",
-        Question: "¿Qué supone la lucha contra la corrupción según el art. 64 de la Ley 9/2017?",
-        Answer: "Obliga a declarar conflictos de interés y establece controles de integridad en la contratación pública.",
-        Reasoning: "Previene prácticas corruptas, fomentando transparencia y confianza en la contratación pública.",
-        Legal_Reference: "Ley 9/2017, artículo 64",
-        Reminder: "Integridad = transparencia + control",
-        Keywords: ["corrupción", "conflictos de interés", "integridad"]
-    },
-    {
-        ID: 82,
-        Category: "administrativo",
-        Question: "¿Qué es el presupuesto base de licitación?",
-        Answer: "Es el importe máximo que la Administración está dispuesta a pagar por la ejecución del contrato.",
-        Reasoning: "Sirve de referencia para las ofertas y garantiza transparencia en la contratación.",
-        Legal_Reference: "Ley 9/2017, artículo 100",
-        Reminder: "Presupuesto base = techo económico",
-        Keywords: ["presupuesto base", "importe máximo"]
-    },
-    {
-        ID: 83,
-        Category: "administrativo",
-        Question: "¿Qué es el valor estimado del contrato?",
-        Answer: "Es el importe total previsto del contrato, incluyendo posibles prórrogas y modificaciones.",
-        Reasoning: "Permite calcular umbrales normativos y comparar ofertas objetivamente.",
-        Legal_Reference: "Ley 9/2017, artículo 101",
-        Reminder: "Valor estimado = coste total previsto",
-        Keywords: ["valor estimado", "importe total"]
-    },
-    {
-        ID: 84,
-        Category: "administrativo",
-        Question: "¿Qué es el precio del contrato?",
-        Answer: "Es el importe final acordado tras la adjudicación y ejecución del contrato.",
-        Reasoning: "Refleja el coste real para la Administración y puede ser inferior al presupuesto base.",
-        Legal_Reference: "Ley 9/2017, artículo 102",
-        Reminder: "Precio = coste real",
-        Keywords: ["precio", "importe final"]
-    },
-    {
-        ID: 85,
-        Category: "administrativo",
-        Question: "¿Qué es la división en lotes de los contratos?",
-        Answer: "Posibilidad de dividir un contrato en partes independientes para facilitar la concurrencia de pymes.",
-        Reasoning: "Fomenta competencia y acceso de empresas pequeñas a la contratación pública.",
-        Legal_Reference: "Ley 9/2017, artículo 99",
-        Reminder: "Lotes = contratos pequeños para pymes",
-        Keywords: ["división en lotes", "pymes", "concurrencia"]
-    },
-    {
-        ID: 86,
-        Category: "administrativo",
-        Question: "¿Qué es el Registro Oficial de Licitadores y Empresas Clasificadas del Sector Público?",
-        Answer: "Registro administrativo donde se inscriben empresas aptas para contratar con el sector público.",
-        Reasoning: "Agiliza procedimientos y garantiza idoneidad de licitadores.",
-        Legal_Reference: "Ley 9/2017, artículo 337",
-        Reminder: "Registro = filtro de calidad",
-        Keywords: ["registro", "licitadores", "transparencia"]
-    },
-    {
-        ID: 87,
-        Category: "administrativo",
-        Question: "¿Qué es el procedimiento de licitación con negociación?",
-        Answer: "Procedimiento en que la Administración negocia con licitadores aspectos técnicos o económicos antes de adjudicar.",
-        Reasoning: "Permite adaptar el contrato a necesidades y obtener mejores condiciones.",
-        Legal_Reference: "Ley 9/2017, artículo 167",
-        Reminder: "Negociar para mejorar",
-        Keywords: ["licitación", "negociación", "contrato"]
-    },
-    {
-        ID: 88,
-        Category: "administrativo",
-        Question: "¿Qué elementos del expediente de contratación deben justificarse adecuadamente?",
-        Answer: "Necesidad del contrato, idoneidad de medios, valoración económica y elección del procedimiento.",
-        Reasoning: "Garantiza transparencia y eficiencia en el uso de recursos públicos.",
-        Legal_Reference: "Ley 9/2017, artículo 116",
-        Reminder: "Justificar para legitimar",
-        Keywords: ["expediente", "justificación", "contratación"]
-    },
-    {
-        ID: 89,
-        Category: "administrativo",
-        Question: "V/F: El presupuesto base de licitación es el importe final acordado tras la adjudicación.",
-        Answer: "Falso. El presupuesto base es el máximo dispuesto a pagar; el precio final puede ser inferior.",
-        Reasoning: "Distinguir entre presupuesto base y precio final es clave para entender la contratación pública.",
-        Legal_Reference: "Ley 9/2017, artículo 100",
-        Reminder: "Base ≠ precio final",
-        Keywords: ["presupuesto base", "importe máximo", "precio final"]
-    },
-    {
-        ID: 90,
-        Category: "administrativo",
-        Question: "¿Qué requisitos exige el art. 32.5 de la Ley 40/2015 para indemnizar por norma contraria al Derecho de la UE?",
-        Answer: "Declaración judicial de contrariedad, daño directo y reclamación en plazo.",
-        Reasoning: "Garantizan que solo se indemnice cuando hay clara vulneración del Derecho de la UE y daño real.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Juicio + daño + plazo",
-        Keywords: ["indemnización", "Derecho UE", "requisitos"]
-    },
-    {
-        ID: 91,
-        Category: "administrativo",
-        Question: "¿Qué principios rigen la responsabilidad patrimonial de la Administración?",
-        Answer: "Legalidad, causalidad, indemnidad y proporcionalidad.",
-        Reasoning: "Aseguran que la Administración responde solo por daños reales, directos y conforme a la ley.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Ley + causa + reparación justa",
-        Keywords: ["principios", "responsabilidad patrimonial"]
-    },
-    {
-        ID: 92,
-        Category: "administrativo",
-        Question: "¿Qué es la responsabilidad patrimonial de la Administración?",
-        Answer: "Obligación de indemnizar a particulares por daños causados por el funcionamiento normal o anormal de servicios públicos.",
-        Reasoning: "Protege derechos ciudadanos frente a daños causados por la Administración.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Daño + reparación",
-        Keywords: ["responsabilidad patrimonial", "indemnización", "daños"]
-    },
-    {
-        ID: 93,
-        Category: "administrativo",
-        Question: "¿Qué es el nexo causal en la responsabilidad patrimonial?",
-        Answer: "Relación directa entre actuación administrativa y daño sufrido por el particular.",
-        Reasoning: "Imprescindible para que exista responsabilidad y se conceda indemnización.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Causa y efecto",
-        Keywords: ["nexo causal", "responsabilidad"]
-    },
-    {
-        ID: 94,
-        Category: "administrativo",
-        Question: "¿Qué es la indemnidad en la responsabilidad patrimonial?",
-        Answer: "Derecho del perjudicado a ser resarcido íntegramente por el daño sufrido, sin enriquecimiento injusto.",
-        Reasoning: "Garantiza reparación completa pero justa.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Indemnidad = cubrir daño sin lucro",
-        Keywords: ["indemnidad", "reparación", "daño"]
-    },
-    {
-        ID: 95,
-        Category: "administrativo",
-        Question: "¿Qué es la prescripción en la responsabilidad patrimonial?",
-        Answer: "Extinción del derecho a reclamar por el transcurso del tiempo sin ejercitar la acción.",
-        Reasoning: "Aporta seguridad jurídica y evita reclamaciones indefinidas.",
-        Legal_Reference: "Ley 40/2015, artículo 67",
-        Reminder: "Tiempo límite para reclamar",
-        Keywords: ["prescripción", "extinción", "reclamación"]
-    },
-    {
-        ID: 96,
-        Category: "administrativo",
-        Question: "¿Qué es la concurrencia de culpas en la responsabilidad patrimonial?",
-        Answer: "Situación en que el perjudicado ha contribuido al daño, pudiendo reducir la indemnización.",
-        Reasoning: "Permite ajustar la indemnización a la responsabilidad real de cada parte.",
-        Legal_Reference: "Ley 40/2015, artículo 34",
-        Reminder: "Culpa compartida, indemnización ajustada",
-        Keywords: ["concurrencia de culpas", "reducción", "indemnización"]
-    },
-    {
-        ID: 97,
-        Category: "administrativo",
-        Question: "¿Qué es la responsabilidad solidaria de las Administraciones Públicas?",
-        Answer: "Obligación de varias Administraciones de responder conjuntamente por un mismo daño.",
-        Reasoning: "Garantiza reparación aunque intervengan varias Administraciones.",
-        Legal_Reference: "Ley 40/2015, artículo 33",
-        Reminder: "Todos responden juntos",
-        Keywords: ["responsabilidad solidaria", "Administraciones", "daño"]
-    },
-    {
-        ID: 98,
-        Category: "administrativo",
-        Question: "¿Qué es la responsabilidad subsidiaria de la Administración?",
-        Answer: "Obligación de una Administración de responder solo si la principal no lo hace.",
-        Reasoning: "Asegura indemnización aunque la Administración principal no cumpla.",
-        Legal_Reference: "Ley 40/2015, artículo 33",
-        Reminder: "Respaldo subsidiario",
-        Keywords: ["responsabilidad subsidiaria", "obligación"]
-    },
-    {
-        ID: 99,
-        Category: "administrativo",
-        Question: "V/F: La Administración solo responde por daños causados por normas con rango de ley.",
-        Answer: "Falso. Responde por daños causados por cualquier actuación administrativa, no solo por normas con rango de ley.",
-        Reasoning: "La responsabilidad es amplia y cubre todas las actuaciones que causen daño.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Responsabilidad amplia",
-        Keywords: ["responsabilidad", "daños", "actuación administrativa"]
-    },
-    {
-        ID: 100,
-        Category: "administrativo",
-        Question: "¿Qué son los bienes de dominio público según el art. 5 de la Ley 33/2003?",
-        Answer: "Bienes y derechos de las Administraciones Públicas destinados al uso público o servicios públicos, inalienables, imprescriptibles e inembargables.",
-        Reasoning: "Están especialmente protegidos para garantizar su uso y conservación para el interés general.",
-        Legal_Reference: "Ley 33/2003, artículo 5",
-        Reminder: "Bienes públicos = protección máxima",
-        Keywords: ["bienes de dominio público", "uso público", "protección"]
-    },
-    {
-        ID: 101,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: a) Los plazos expresados en días se entienden hábiles, salvo que por ley o en el derecho de la Unión Europea se exprese lo contrario.",
-        Answer: "Verdadero. Los plazos en días se cuentan en días hábiles, es decir, excluyendo sábados, domingos y festivos, salvo que la ley indique lo contrario.",
-        Reasoning: "Esta regla facilita la planificación y asegura que los plazos se calculen considerando solo los días laborables, evitando confusiones.",
-        Legal_Reference: "Ley 39/2015, artículo 30",
-        Reminder: "Días hábiles, no naturales, salvo excepción",
-        Keywords: ["plazos", "días hábiles", "cómputo"]
-    },
-    {
-        ID: 102,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: b) Si el último día del plazo es inhábil, se prorroga al siguiente hábil.",
-        Answer: "Verdadero. Cuando el último día para realizar un trámite es inhábil, el plazo se extiende automáticamente hasta el siguiente día hábil.",
-        Reasoning: "Esta norma protege al interesado para que no pierda derechos por coincidencia con días no laborables.",
-        Legal_Reference: "Ley 39/2015, artículo 30",
-        Reminder: "Último día inhábil, prórroga al hábil",
-        Keywords: ["plazo", "prórroga", "día inhábil"]
-    },
-    {
-        ID: 103,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: c) Los sábados son días hábiles.",
-        Answer: "Falso. Los sábados se consideran días inhábiles para el cómputo de plazos administrativos, junto con domingos y festivos.",
-        Reasoning: "Esto evita que se cuenten días en los que la Administración no trabaja, asegurando plazos justos.",
-        Legal_Reference: "Ley 39/2015, artículo 30",
-        Reminder: "Sábados = inhábiles",
-        Keywords: ["sábados", "inhábiles", "plazos"]
-    },
-    {
-        ID: 104,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: d) El plazo para la notificación de actos administrativos es de diez días.",
-        Answer: "Verdadero. La Administración dispone de diez días para notificar los actos desde que son dictados.",
-        Reasoning: "Este plazo garantiza rapidez en la comunicación y seguridad jurídica para los interesados.",
-        Legal_Reference: "Ley 39/2015, artículo 40",
-        Reminder: "10 días para notificar",
-        Keywords: ["notificación", "plazo", "diez días"]
-    },
-    {
-        ID: 105,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: e) El plazo para interponer recurso de alzada es de un mes.",
-        Answer: "Verdadero. El interesado tiene un mes desde la notificación para presentar recurso de alzada.",
-        Reasoning: "Este plazo asegura que los recursos se presenten con prontitud para una resolución ágil.",
-        Legal_Reference: "Ley 39/2015, artículo 122",
-        Reminder: "1 mes para alzada",
-        Keywords: ["recurso de alzada", "plazo", "un mes"]
-    },
-    {
-        ID: 106,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: f) El plazo para resolver y notificar el recurso de alzada es de tres meses.",
-        Answer: "Verdadero. La Administración debe resolver y notificar el recurso de alzada en un plazo máximo de tres meses.",
-        Reasoning: "Este límite temporal protege al interesado frente a dilaciones injustificadas.",
-        Legal_Reference: "Ley 39/2015, artículo 122",
-        Reminder: "3 meses para resolver alzada",
-        Keywords: ["resolución", "recurso de alzada", "tres meses"]
-    },
-    {
-        ID: 107,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: g) El silencio administrativo en el recurso de alzada es desestimatorio.",
-        Answer: "Verdadero. Si la Administración no resuelve el recurso de alzada en plazo, se entiende desestimado por silencio.",
-        Reasoning: "Esta regla protege la seguridad jurídica y obliga a la Administración a pronunciarse.",
-        Legal_Reference: "Ley 39/2015, artículo 122",
-        Reminder: "Silencio en alzada = desestimatorio",
-        Keywords: ["silencio administrativo", "desestimatorio", "recurso de alzada"]
-    },
-    {
-        ID: 108,
-        Category: "administrativo",
-        Question: "En relación con el cómputo de plazos de la LPAC: h) El plazo para interponer recurso de reposición es de un mes.",
-        Answer: "Verdadero. El recurso de reposición debe interponerse en el plazo de un mes desde la notificación del acto.",
-        Reasoning: "Este plazo permite una revisión rápida antes de acudir a la vía judicial.",
-        Legal_Reference: "Ley 39/2015, artículo 124",
-        Reminder: "1 mes para reposición",
-        Keywords: ["recurso de reposición", "plazo", "un mes"]
-    },
-    {
-        ID: 109,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: a) No puede dar lugar a indemnización la aplicación de una norma contraria al Derecho de la Unión Europea.",
-        Answer: "Falso. Sí puede dar lugar a indemnización si la norma ha sido declarada contraria al Derecho de la UE y se cumplen los requisitos legales.",
-        Reasoning: "Esto protege a los ciudadanos frente a daños causados por normas ilegales conforme al Derecho de la UE.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Norma contraria UE = posible indemnización",
-        Keywords: ["indemnización", "Derecho UE", "responsabilidad"]
-    },
-    {
-        ID: 110,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: b) La responsabilidad patrimonial exige la existencia de un daño efectivo, evaluable económicamente e individualizado.",
-        Answer: "Verdadero. Solo se indemnizan daños reales, cuantificables y que afecten a una persona concreta.",
-        Reasoning: "Garantiza que la reparación sea justa y proporcional al daño sufrido.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Daño real + cuantificable + individualizado",
-        Keywords: ["daño efectivo", "individualizado", "indemnización"]
-    },
-    {
-        ID: 111,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: c) La Administración responde por el funcionamiento normal y anormal de los servicios públicos.",
-        Answer: "Verdadero. La responsabilidad cubre daños causados tanto por el funcionamiento correcto como incorrecto de los servicios públicos.",
-        Reasoning: "Esto amplía la protección del ciudadano frente a cualquier daño derivado de la Administración.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Funcionamiento normal o anormal = responsabilidad",
-        Keywords: ["funcionamiento normal", "anormal", "responsabilidad"]
-    },
-    {
-        ID: 112,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: d) La responsabilidad patrimonial es objetiva.",
-        Answer: "Verdadero. No es necesario probar culpa o negligencia, basta con el daño y el nexo causal.",
-        Reasoning: "Facilita la reparación al ciudadano sin necesidad de demostrar culpa administrativa.",
-        Legal_Reference: "Ley 40/2015, artículo 32",
-        Reminder: "Sin culpa = responsabilidad objetiva",
-        Keywords: ["responsabilidad objetiva", "daño", "nexo causal"]
-    },
-    {
-        ID: 113,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: e) Solo el Ministro competente puede resolver los procedimientos de responsabilidad patrimonial.",
-        Answer: "Falso. Otros órganos pueden ser competentes según la materia y ámbito de la Administración.",
-        Reasoning: "Esto permite una gestión más ágil y adecuada según el caso concreto.",
-        Legal_Reference: "Ley 40/2015, artículo 67",
-        Reminder: "Varios órganos pueden resolver",
-        Keywords: ["competencia", "órganos", "responsabilidad patrimonial"]
-    },
-    {
-        ID: 114,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: f) El procedimiento de responsabilidad patrimonial solo puede terminar por resolución.",
-        Answer: "Falso. También puede terminar por desistimiento, renuncia, transacción o caducidad.",
-        Reasoning: "Ofrece flexibilidad para resolver los procedimientos de forma consensuada o por voluntad del interesado.",
-        Legal_Reference: "Ley 40/2015, artículo 95",
-        Reminder: "Varias formas de terminar",
-        Keywords: ["terminación", "procedimiento", "responsabilidad patrimonial"]
-    },
-    {
-        ID: 115,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: g) El plazo para reclamar la responsabilidad patrimonial es de un año desde que se produjo el daño.",
-        Answer: "Verdadero. El plazo general para reclamar es de un año desde la producción o manifestación del daño.",
-        Reasoning: "Este plazo protege la seguridad jurídica y obliga a actuar con diligencia.",
-        Legal_Reference: "Ley 40/2015, artículo 67",
-        Reminder: "1 año para reclamar",
-        Keywords: ["plazo", "reclamación", "responsabilidad patrimonial"]
-    },
-    {
-        ID: 116,
-        Category: "administrativo",
-        Question: "En relación con la responsabilidad patrimonial de las AAPP: h) La Administración debe exigir de oficio la responsabilidad de sus autoridades y personal cuando concurra culpa o negligencia.",
-        Answer: "Verdadero. La Administración debe repetir contra el responsable cuando haya culpa o negligencia.",
-        Reasoning: "Esto protege el patrimonio público y fomenta la responsabilidad interna.",
-        Legal_Reference: "Ley 40/2015, artículo 36",
-        Reminder: "Repetición por culpa/negligencia",
-        Keywords: ["repetición", "culpa", "negligencia"]
-    },
-    {
-        ID: 117,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: a) Los bienes patrimoniales pueden ser enajenados conforme a la ley.",
-        Answer: "Verdadero. Los bienes patrimoniales, a diferencia de los de dominio público, pueden ser vendidos o gravados conforme a la normativa vigente.",
-        Reasoning: "La posibilidad de enajenar bienes patrimoniales permite a la Administración gestionar su patrimonio de forma eficiente y adaptada a sus necesidades.",
-        Legal_Reference: "Ley 33/2003, artículo 137",
-        Reminder: "Patrimoniales = se pueden vender",
-        Keywords: ["bienes patrimoniales", "enajenación", "ley"]
-    },
-    {
-        ID: 118,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: b) Los bienes patrimoniales pueden ser arrendados.",
-        Answer: "Verdadero. La ley permite el arrendamiento de bienes patrimoniales para su mejor aprovechamiento y uso.",
-        Reasoning: "El arrendamiento facilita la utilización de bienes públicos sin perder la titularidad, promoviendo su aprovechamiento económico.",
-        Legal_Reference: "Ley 33/2003, artículo 140",
-        Reminder: "Patrimoniales = se pueden arrendar",
-        Keywords: ["bienes patrimoniales", "arrendamiento", "explotación"]
-    },
-    {
-        ID: 119,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: c) Los bienes patrimoniales pueden ser gravados con derechos reales.",
-        Answer: "Verdadero. Se pueden constituir derechos reales, como hipotecas o servidumbres, sobre bienes patrimoniales.",
-        Reasoning: "Esto permite a la Administración gestionar y garantizar obligaciones mediante garantías reales sobre sus bienes.",
-        Legal_Reference: "Ley 33/2003, artículo 141",
-        Reminder: "Patrimoniales = admiten gravámenes",
-        Keywords: ["bienes patrimoniales", "derechos reales", "gravamen"]
-    },
-    {
-        ID: 120,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: d) Los bienes patrimoniales pueden ser destinados al uso público sin necesidad de afectación formal.",
-        Answer: "Falso. Para que un bien patrimonial pase a uso público debe ser formalmente afectado al dominio público mediante acto administrativo.",
-        Reasoning: "La afectación formal garantiza la protección y el correcto uso público de los bienes, evitando usos indebidos.",
-        Legal_Reference: "Ley 33/2003, artículo 68",
-        Reminder: "Uso público requiere afectación formal",
-        Keywords: ["afectación", "dominio público", "bienes patrimoniales"]
-    },
-    {
-        ID: 121,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: e) Los bienes patrimoniales pueden ser permutados por otros bienes.",
-        Answer: "Verdadero. La permuta es una forma legal de gestión patrimonial para optimizar el patrimonio público.",
-        Reasoning: "Permite a la Administración intercambiar bienes para mejorar su cartera patrimonial y adaptarse a nuevas necesidades.",
-        Legal_Reference: "Ley 33/2003, artículo 138",
-        Reminder: "Patrimoniales = se pueden permutar",
-        Keywords: ["permuta", "bienes patrimoniales", "gestión"]
-    },
-    {
-        ID: 122,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: f) Los bienes patrimoniales pueden ser cedidos gratuitamente a otras Administraciones Públicas.",
-        Answer: "Verdadero. La cesión gratuita está prevista para fines de interés público y colaboración interadministrativa.",
-        Reasoning: "Facilita la cooperación entre Administraciones para el mejor uso de los recursos públicos.",
-        Legal_Reference: "Ley 33/2003, artículo 143",
-        Reminder: "Cesión gratuita entre AAPP",
-        Keywords: ["cesión gratuita", "bienes patrimoniales", "colaboración"]
-    },
-    {
-        ID: 123,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: g) Los bienes patrimoniales pueden ser objeto de concesión administrativa.",
-        Answer: "Verdadero. La concesión permite el uso privativo de bienes patrimoniales por terceros bajo condiciones establecidas.",
-        Reasoning: "Esta figura permite compatibilizar el uso público con la explotación privada bajo control administrativo.",
-        Legal_Reference: "Ley 33/2003, artículo 142",
-        Reminder: "Concesión sobre patrimoniales",
-        Keywords: ["concesión administrativa", "bienes patrimoniales", "uso privativo"]
-    },
-    {
-        ID: 124,
-        Category: "administrativo",
-        Question: "En relación con el aprovechamiento y explotación de los bienes y derechos patrimoniales del Estado: h) Los bienes patrimoniales pueden ser objeto de expropiación.",
-        Answer: "Verdadero. La expropiación puede afectar a bienes patrimoniales para fines de utilidad pública o interés social.",
-        Reasoning: "La expropiación es un instrumento para garantizar el interés general cuando es necesario.",
-        Legal_Reference: "Ley 33/2003, artículo 146",
-        Reminder: "Patrimoniales = expropiables",
-        Keywords: ["expropiación", "bienes patrimoniales", "utilidad pública"]
-    },
-    {
-        ID: 125,
-        Category: "administrativo",
-        Question: "En relación con la excedencia voluntaria por agrupación familiar: a) La excedencia voluntaria por agrupación familiar computa a efectos de trienios y carrera.",
-        Answer: "Falso. Solo la excedencia por cuidado de hijos o violencia de género computa a efectos de antigüedad y carrera.",
-        Reasoning: "Es importante distinguir los tipos de excedencia para conocer sus efectos en la carrera administrativa.",
-        Legal_Reference: "Ley 7/2007, artículo 89",
-        Reminder: "Agrupación familiar NO computa",
-        Keywords: ["excedencia voluntaria", "agrupación familiar", "trienios"]
-    },
-    {
-        ID: 126,
-        Category: "administrativo",
-        Question: "En relación con el principio de igualdad de trato entre mujeres y hombres: a) El principio de igualdad de trato prohíbe toda discriminación por razón de sexo en el acceso a derechos y recursos.",
-        Answer: "Verdadero. La igualdad de trato es un principio básico para garantizar equidad y justicia social.",
-        Reasoning: "Este principio es fundamental para construir una sociedad justa y equitativa, eliminando barreras por género.",
-        Legal_Reference: "Ley Orgánica 3/2007, artículo 6",
-        Reminder: "Igualdad = no discriminación por sexo",
-        Keywords: ["igualdad de trato", "discriminación", "sexo"]
-    }
-];
-]; // Este array debe contener las 126 preguntas del CSV
-
-        // Sistema de selección completamente aleatorio basado en IDs del 2 al 126
-        const MIN_ID = 2;
-        const MAX_ID = 126;
-
-        // Función para generar números aleatorios únicos usando el algoritmo Fisher-Yates
-        function getRandomNumbers(count, min, max) {
-            const numbers = [];
-            const available = [];
-            
-            // Crear array con todos los números disponibles del 2 al 126
-            for (let i = min; i <= max; i++) {
-                available.push(i);
-            }
-            
-            // Aplicar algoritmo Fisher-Yates para obtener números aleatorios sin repetición
-            for (let i = 0; i < count && i < available.length; i++) {
-                const randomIndex = Math.floor(Math.random() * (available.length - i)) + i;
-                [available[i], available[randomIndex]] = [available[randomIndex], available[i]];
-                numbers.push(available[i]);
-            }
-            
-            return numbers;
-        }
-
-        // Función para seleccionar preguntas basadas en IDs aleatorios (2-126)
-        function selectQuestionsByRandomIds(numQuestions, category) {
-            let availableQuestions = questionsData;
-            
-            // Filtrar por categoría si no es TODO
-            if (category !== "TODO") {
-                availableQuestions = questionsData.filter(q => q.Category === category);
-            }
-            
-            // Obtener los IDs disponibles para la categoría seleccionada
-            const availableIds = availableQuestions.map(q => parseInt(q.ID));
-            
-            // Generar números aleatorios del conjunto de IDs disponibles
-            const numToSelect = Math.min(numQuestions, availableQuestions.length);
-            const randomNumbers = [];
-            
-            // Crear un pool de IDs válidos (intersección entre 2-126 y los IDs disponibles)
-            const validIds = availableIds.filter(id => id >= MIN_ID && id <= MAX_ID);
-            
-            // Seleccionar aleatoriamente del pool de IDs válidos
-            const selectedIndices = getRandomNumbers(numToSelect, 0, validIds.length - 1);
-            const selectedIds = selectedIndices.map(index => validIds[index]);
-            
-            // Debug info
-            console.log(`Categoría: ${category}`);
-            console.log(`Preguntas disponibles: ${availableQuestions.length}`);
-            console.log(`IDs seleccionados: ${selectedIds.join(', ')}`);
-            
-            // Seleccionar preguntas que coincidan con los IDs aleatorios
-            const selectedQuestions = [];
-            for (const id of selectedIds) {
-                const question = availableQuestions.find(q => parseInt(q.ID) === id);
-                if (question) {
-                    selectedQuestions.push(question);
-                }
-            }
-            
-            return selectedQuestions;
-        }
-
-        // Estadísticas de preguntas
-        let questionStats = JSON.parse(localStorage.getItem('questionStats')) || {};
-
-        // Variables de estado del quiz
+        // Variables globales
+        let questionsData = [];
+        let availableCategories = new Set();
+        let sessionStats = {};
         let currentQuestions = [];
         let currentQuestionIndex = 0;
         let score = 0;
@@ -1816,7 +558,11 @@ Aquí está la actualización del código con el rango correcto:
         let incorrectAnswers = [];
 
         // Elementos DOM
+        const loadingPanel = document.getElementById('loadingPanel');
+        const errorPanel = document.getElementById('errorPanel');
+        const errorMessage = document.getElementById('errorMessage');
         const configPanel = document.getElementById('configPanel');
+        const categorySelect = document.getElementById('category');
         const quizContainer = document.getElementById('quizContainer');
         const resultContainer = document.getElementById('resultContainer');
         const currentQuestionElement = document.getElementById('currentQuestion');
@@ -1838,153 +584,317 @@ Aquí está la actualización del código con el rango correcto:
         const reminderText = document.getElementById('reminderText');
         const keywordSection = document.getElementById('keywordSection');
         const keywordList = document.getElementById('keywordList');
-        const debugInfo = document.getElementById('debugInfo');
 
         // Botones
         const startBtn = document.getElementById('startBtn');
         const nextBtn = document.getElementById('nextBtn');
         const restartBtn = document.getElementById('restartBtn');
 
-        // Función para generar el enlace legal
-        function generateLegalLink(reference) {
-            if (reference.includes("artículo")) {
-                const articleMatch = reference.match(/artículo\s+(\d+)/i);
-                if (articleMatch) {
-                    const articleNumber = articleMatch[1];
-                    if (reference.includes("Ley 39/2015")) {
-                        return `https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565&p=20241106&tn=1#a${articleNumber}`;
-                    } else if (reference.includes("Ley 40/2015")) {
-                        return `https://www.boe.es/buscar/act.php?id=BOE-A-2015-10566&p=20241106&tn=1#a${articleNumber}`;
-                    } else if (reference.includes("Constitución")) {
-                        return `https://www.boe.es/buscar/act.php?id=BOE-A-1978-31229&p=20110927&tn=1#a${articleNumber}`;
-                    } else if (reference.includes("Ley 19/2013")) {
-                        return `https://www.boe.es/buscar/act.php?id=BOE-A-2013-12887&tn=1#a${articleNumber}`;
-                    } else if (reference.includes("Código Civil")) {
-                        return `https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763&tn=1#a${articleNumber}`;
+        // Función para parsear líneas CSV con comillas
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            let i = 0;
+
+            while (i < line.length) {
+                const char = line[i];
+
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        // Comilla doble escapada
+                        current += '"';
+                        i += 2;
+                    } else {
+                        // Cambiar estado de las comillas
+                        inQuotes = !inQuotes;
+                        i++;
                     }
+                } else if (char === ',' && !inQuotes) {
+                    // Separador de campo
+                    result.push(current.trim());
+                    current = '';
+                    i++;
+                } else {
+                    current += char;
+                    i++;
                 }
             }
+
+            // Añadir el último campo
+            result.push(current.trim());
+            return result;
+        }
+
+        // Función para extraer recordatorios del texto
+        function extractReminder(text) {
+            if (!text) return '';
+            
+            const reminderPatterns = [
+                /Recuerda:\s*([^.]+(?:\.[^.]*)?)/i,
+                /Mnemotecnia:\s*([^.]+(?:\.[^.]*)?)/i,
+                /Ejemplo:\s*([^.]+(?:\.[^.]*)?)/i
+            ];
+
+            for (const pattern of reminderPatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    return match[1].trim();
+                }
+            }
+
+            return '';
+        }
+
+        // Función para extraer palabras clave del texto
+        function extractKeywords(text) {
+            if (!text) return [];
+            
+            const keywordMatch = text.match(/Palabras clave:\s*([^.]+)/i);
+            if (keywordMatch) {
+                return keywordMatch[1].split(',').map(k => k.trim()).filter(k => k.length > 0);
+            }
+            
+            return [];
+        }
+
+        // Función para limpiar el texto de la respuesta
+        function cleanAnswerText(text) {
+            if (!text) return '';
+            
+            // Eliminar las partes adicionales (Recuerda, Ejemplo, Palabras clave, etc.)
+            return text
+                .replace(/Recuerda:.*$/i, '')
+                .replace(/Mnemotecnia:.*$/i, '')
+                .replace(/Ejemplo:.*$/i, '')
+                .replace(/Palabras clave:.*$/i, '')
+                .trim();
+        }
+
+        // Función para cargar y parsear el CSV
+        async function loadQuestionsFromCSV() {
+            try {
+                console.log('Cargando CSV...');
+                const response = await fetch('FC_ADMINISTRATIVO_BEST.csv');
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+                }
+                
+                const csvText = await response.text();
+                console.log('CSV cargado, tamaño:', csvText.length);
+                
+                // Dividir en líneas
+                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                console.log('Líneas encontradas:', lines.length);
+                
+                // Saltar la cabecera
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    try {
+                        const values = parseCSVLine(line);
+                        
+                        if (values.length >= 6) {
+                            const rawAnswer = values[3] || '';
+                            const cleanAnswer = cleanAnswerText(rawAnswer);
+                            const reminder = extractReminder(rawAnswer);
+                            const keywords = extractKeywords(rawAnswer);
+                            
+                            const question = {
+                                ID: parseInt(values[0]) || i,
+                                Category: values[1] || 'Sin categoría',
+                                Question: values[2] || '',
+                                Answer: cleanAnswer,
+                                Reasoning: values[4] || '',
+                                Legal_Reference: values[5] || '',
+                                Reminder: reminder,
+                                Keywords: keywords
+                            };
+                            
+                            questionsData.push(question);
+                            availableCategories.add(question.Category);
+                        }
+                    } catch (lineError) {
+                        console.warn(`Error procesando línea ${i}:`, lineError);
+                    }
+                }
+                
+                console.log(`Preguntas cargadas: ${questionsData.length}`);
+                console.log('Categorías encontradas:', Array.from(availableCategories));
+                
+                if (questionsData.length === 0) {
+                    throw new Error('No se encontraron preguntas válidas en el archivo CSV');
+                }
+                
+                // Llenar el selector de categorías
+                populateCategorySelector();
+                
+                // Mostrar panel de configuración
+                showConfigPanel();
+                
+            } catch (error) {
+                console.error('Error al cargar CSV:', error);
+                showError(`Error al cargar las preguntas: ${error.message}`);
+            }
+        }
+
+        // Función para llenar el selector de categorías
+        function populateCategorySelector() {
+            categorySelect.innerHTML = '<option value="TODO" selected>Todo</option>';
+            
+            const sortedCategories = Array.from(availableCategories).sort();
+            sortedCategories.forEach(category => {
+                if (category && category !== 'TODO') {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                }
+            });
+        }
+
+        // Función para mostrar error
+        function showError(message) {
+            loadingPanel.style.display = 'none';
+            configPanel.style.display = 'none';
+            errorMessage.textContent = message;
+            errorPanel.style.display = 'block';
+        }
+
+        // Función para mostrar el panel de configuración
+        function showConfigPanel() {
+            loadingPanel.style.display = 'none';
+            errorPanel.style.display = 'none';
+            configPanel.style.display = 'block';
+        }
+
+        // Sistema de selección aleatoria
+        function getRandomNumbers(count, min, max) {
+            const numbers = [];
+            const available = [];
+            
+            for (let i = min; i <= max; i++) {
+                available.push(i);
+            }
+            
+            for (let i = 0; i < count && i < available.length; i++) {
+                const randomIndex = Math.floor(Math.random() * (available.length - i)) + i;
+                [available[i], available[randomIndex]] = [available[randomIndex], available[i]];
+                numbers.push(available[i]);
+            }
+            
+            return numbers;
+        }
+
+        function selectQuestionsByRandomIds(numQuestions, category) {
+            console.log('Seleccionando preguntas. Número:', numQuestions, 'Categoría:', category);
+            
+            let availableQuestions = questionsData;
+            
+            if (category !== "TODO") {
+                availableQuestions = questionsData.filter(q => q.Category === category);
+            }
+            
+            console.log('Preguntas disponibles:', availableQuestions.length);
+            
+            const numToSelect = Math.min(numQuestions, availableQuestions.length);
+            const availableIds = availableQuestions.map(q => q.ID);
+            const randomIds = getRandomNumbers(numToSelect, 0, availableIds.length - 1);
+            const selectedIds = randomIds.map(index => availableIds[index]);
+            
+            console.log('IDs seleccionados:', selectedIds);
+            
+            const selectedQuestions = [];
+            for (const id of selectedIds) {
+                const question = availableQuestions.find(q => q.ID === id);
+                if (question) {
+                    selectedQuestions.push(question);
+                }
+            }
+            
+            console.log('Preguntas seleccionadas:', selectedQuestions.length);
+            return selectedQuestions;
+        }
+
+        // Función para generar enlace legal
+        function generateLegalLink(reference) {
+            if (!reference) return null;
+            
+            // Si ya contiene un enlace directo, usarlo
+            if (reference.includes('https://')) {
+                const linkMatch = reference.match(/https:\/\/[^\s"]+/);
+                return linkMatch ? linkMatch[0] : null;
+            }
+            
             return null;
         }
 
-        // Función mejorada para generar opciones incorrectas
-        function generateIncorrectOptions(correctAnswer, question, legalReference) {
+        // Función para generar opciones incorrectas
+        function generateIncorrectOptions(correctAnswer, question) {
             const incorrectOptions = [];
             
-            // Estrategias específicas según el tipo de pregunta
-            if (question.toLowerCase().includes("plazo") || correctAnswer.includes("días") || correctAnswer.includes("meses")) {
-                // Modificar plazos
-                const plazos = ["10 días", "15 días", "20 días", "30 días", "45 días", "60 días", "3 meses", "6 meses"];
-                const correctPlazo = correctAnswer.match(/(\d+)\s*(días|meses)/i);
-                if (correctPlazo) {
-                    const filteredPlazos = plazos.filter(p => !correctAnswer.includes(p));
-                    for (let i = 0; i < 3 && i < filteredPlazos.length; i++) {
-                        incorrectOptions.push(correctAnswer.replace(correctPlazo[0], filteredPlazos[i]));
-                    }
+            // Estrategias para generar opciones incorrectas
+            if (question.toLowerCase().includes("verdadero") || question.toLowerCase().includes("falso") || question.toLowerCase().includes("v/f")) {
+                if (correctAnswer.toLowerCase().startsWith("verdadero")) {
+                    incorrectOptions.push(correctAnswer.replace(/^Verdadero\./i, "Falso."));
+                } else if (correctAnswer.toLowerCase().startsWith("falso")) {
+                    incorrectOptions.push(correctAnswer.replace(/^Falso\./i, "Verdadero."));
                 }
-            }
-            
-            if (question.toLowerCase().includes("órgano") || question.toLowerCase().includes("competencia")) {
-                // Cambiar órganos competentes
-                const organos = {
-                    "Gobierno": ["Congreso", "Senado", "Ministro", "Secretario de Estado"],
-                    "Congreso": ["Gobierno", "Senado", "Consejo de Ministros", "Presidente"],
-                    "comunidades autónomas": ["diputaciones provinciales", "ayuntamientos", "entidades locales menores"],
-                    "Ministro": ["Secretario de Estado", "Director General", "Subsecretario"],
-                    "Administración": ["órgano competente", "superior jerárquico", "titular del departamento"]
-                };
-                
-                for (const [original, alternativas] of Object.entries(organos)) {
-                    if (correctAnswer.includes(original)) {
-                        alternativas.forEach((alt, idx) => {
-                            if (idx < 3 && incorrectOptions.length < 3) {
-                                incorrectOptions.push(correctAnswer.replace(new RegExp(original, 'g'), alt));
-                            }
-                        });
-                    }
-                }
-            }
-            
-            if (question.toLowerCase().includes("no") || correctAnswer.includes("no ")) {
-                // Inversión de negaciones
-                if (correctAnswer.includes("no se pueden") || correctAnswer.includes("no pueden")) {
-                    incorrectOptions.push(correctAnswer.replace(/no se pueden/g, "se pueden").replace(/no pueden/g, "pueden"));
-                    incorrectOptions.push(correctAnswer.replace(/no se pueden/g, "excepcionalmente se pueden").replace(/no pueden/g, "pueden previa autorización"));
-                } else if (correctAnswer.includes("pueden")) {
-                    incorrectOptions.push(correctAnswer.replace(/pueden/g, "no pueden"));
-                    incorrectOptions.push(correctAnswer.replace(/pueden/g, "solo pueden previa autorización"));
-                }
-            }
-            
-            if (question.toLowerCase().includes("requisitos") || question.toLowerCase().includes("elementos")) {
-                // Modificar listas de requisitos
-                const elementos = correctAnswer.split(/[.;,]/);
-                if (elementos.length > 2) {
-                    // Eliminar un elemento
-                    const modificado1 = elementos.slice(0, -1).join(". ");
-                    incorrectOptions.push(modificado1);
-                    
-                    // Añadir un elemento ficticio
-                    const elementosFicticios = [
-                        "autorización previa del superior jerárquico",
-                        "informe vinculante del órgano consultivo",
-                        "publicación en el boletín oficial correspondiente",
-                        "ratificación por mayoría absoluta"
-                    ];
-                    incorrectOptions.push(correctAnswer + ". " + elementosFicticios[Math.floor(Math.random() * elementosFicticios.length)]);
-                }
-            }
-            
-            // Estrategias generales si no se han generado suficientes opciones
-            while (incorrectOptions.length < 3) {
-                const estrategias = [
-                    // Cambiar "siempre" por "nunca" y viceversa
-                    () => correctAnswer.replace(/siempre/g, "nunca").replace(/nunca/g, "siempre"),
-                    
-                    // Añadir excepciones ficticias
-                    () => correctAnswer + ", salvo autorización expresa del Consejo de Ministros",
-                    
-                    // Cambiar mayorías
-                    () => correctAnswer.replace(/mayoría absoluta/g, "mayoría simple").replace(/mayoría simple/g, "mayoría absoluta"),
-                    
-                    // Opción de "ninguna es correcta"
-                    () => "Ninguna de las anteriores es correcta",
-                    
-                    // Modificar porcentajes o fracciones
-                    () => correctAnswer.replace(/mitad/g, "tercera parte").replace(/tercio/g, "mitad"),
-                    
-                    // Cambiar carácter de la norma
-                    () => correctAnswer.replace(/obligatorio/g, "voluntario").replace(/preceptivo/g, "facultativo"),
-                    
-                    // Modificar el ámbito
-                    () => correctAnswer.replace(/estatal/g, "autonómico").replace(/nacional/g, "comunitario")
+                incorrectOptions.push("Depende del contexto y la normativa aplicable");
+                incorrectOptions.push("Solo es verdadero en casos excepcionales previstos en la ley");
+            } else {
+                // Modificaciones semánticas para otras preguntas
+                const modificaciones = [
+                    { original: /no pueden/g, reemplazo: "pueden" },
+                    { original: /pueden/g, reemplazo: "no pueden" },
+                    { original: /obligatorio/g, reemplazo: "voluntario" },
+                    { original: /siempre/g, reemplazo: "nunca" },
+                    { original: /Gobierno/g, reemplazo: "Parlamento" },
+                    { original: /un mes/g, reemplazo: "tres meses" },
+                    { original: /30 días/g, reemplazo: "60 días" }
                 ];
                 
-                const estrategia = estrategias[Math.floor(Math.random() * estrategias.length)];
-                const opcion = estrategia();
+                for (const mod of modificaciones) {
+                    if (correctAnswer.match(mod.original) && incorrectOptions.length < 3) {
+                        incorrectOptions.push(correctAnswer.replace(mod.original, mod.reemplazo));
+                    }
+                }
                 
-                if (opcion !== correctAnswer && !incorrectOptions.includes(opcion)) {
-                    incorrectOptions.push(opcion);
+                // Completar con opciones genéricas
+                while (incorrectOptions.length < 3) {
+                    const opcionesGenericas = [
+                        "Ninguna de las anteriores es correcta",
+                        "Todas las anteriores son correctas",
+                        "Solo es aplicable en casos excepcionales"
+                    ];
+                    
+                    const opcion = opcionesGenericas[incorrectOptions.length];
+                    if (opcion && !incorrectOptions.includes(opcion)) {
+                        incorrectOptions.push(opcion);
+                    } else {
+                        break;
+                    }
                 }
             }
             
             return incorrectOptions.slice(0, 3);
         }
 
-        // Función para mostrar la pregunta actual
+        // Función para mostrar pregunta
         function showQuestion() {
             const question = currentQuestions[currentQuestionIndex];
             
             // Actualizar estadísticas
-            const questionId = parseInt(question.ID);
-            if (!questionStats[questionId]) {
-                questionStats[questionId] = { 
+            const questionId = question.ID;
+            if (!sessionStats[questionId]) {
+                sessionStats[questionId] = { 
                     question: question.Question, 
                     timesShown: 0 
                 };
             }
-            questionStats[questionId].timesShown++;
-            localStorage.setItem('questionStats', JSON.stringify(questionStats));
+            sessionStats[questionId].timesShown++;
             
             // Actualizar UI
             currentQuestionElement.textContent = currentQuestionIndex + 1;
@@ -1992,10 +902,10 @@ Aquí está la actualización del código con el rango correcto:
             
             // Crear opciones
             const options = [question.Answer];
-            const incorrectOptions = generateIncorrectOptions(question.Answer, question.Question, question.Legal_Reference);
+            const incorrectOptions = generateIncorrectOptions(question.Answer, question.Question);
             options.push(...incorrectOptions);
             
-            // Mezclar opciones usando Fisher-Yates
+            // Mezclar opciones
             for (let i = options.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [options[i], options[j]] = [options[j], options[i]];
@@ -2015,20 +925,16 @@ Aquí está la actualización del código con el rango correcto:
             feedbackElement.style.display = 'none';
             nextBtn.style.display = 'none';
             selectedAnswer = null;
-            
-            // Debug info (solo en desarrollo)
-            // debugInfo.innerHTML = `ID de pregunta: ${question.ID}<br>Categoría: ${question.Category}`;
-            // debugInfo.style.display = 'block';
         }
 
-        // Función para seleccionar una opción
+        // Función para seleccionar opción
         function selectOption(button, isCorrect) {
             if (selectedAnswer !== null) return;
             
             selectedAnswer = isCorrect;
             button.classList.add('selected');
             
-            // Deshabilitar todas las opciones
+            // Deshabilitar opciones
             const allOptions = optionsElement.querySelectorAll('.option');
             allOptions.forEach(opt => {
                 opt.style.pointerEvents = 'none';
@@ -2039,10 +945,7 @@ Aquí está la actualización del código con el rango correcto:
                 }
             });
             
-            // Mostrar resultado después de un breve delay
-            setTimeout(() => {
-                showFeedback(isCorrect);
-            }, 500);
+            setTimeout(() => showFeedback(isCorrect), 500);
         }
 
         // Función para mostrar feedback
@@ -2060,7 +963,6 @@ Aquí está la actualización del código con el rango correcto:
                 feedbackTitleElement.textContent = 'Incorrecto 😔';
                 feedbackTextElement.innerHTML = `<strong>Respuesta correcta:</strong><br>${question.Answer}`;
                 
-                // Guardar para revisión
                 incorrectAnswers.push({
                     question: question.Question,
                     correctAnswer: question.Answer,
@@ -2068,7 +970,7 @@ Aquí está la actualización del código con el rango correcto:
                 });
             }
             
-            // Añadir referencia legal con enlace
+            // Referencia legal
             if (question.Legal_Reference) {
                 const legalLink = generateLegalLink(question.Legal_Reference);
                 if (legalLink) {
@@ -2081,7 +983,7 @@ Aquí está la actualización del código con el rango correcto:
                 }
             }
             
-            // Mostrar recordatorios y palabras clave solo después de responder
+            // Mostrar recordatorios y palabras clave
             if (question.Reminder || (question.Keywords && question.Keywords.length > 0)) {
                 studyTipsElement.style.display = 'block';
                 
@@ -2108,13 +1010,12 @@ Aquí está la actualización del código con el rango correcto:
                 studyTipsElement.style.display = 'none';
             }
             
-            // Mostrar botón siguiente
             nextBtn.style.display = 'block';
             nextBtn.textContent = currentQuestionIndex < currentQuestions.length - 1 ? 
                 'Siguiente Pregunta' : 'Ver Resultados';
         }
 
-        // Función para pasar a la siguiente pregunta
+        // Función para siguiente pregunta
         function nextQuestion() {
             currentQuestionIndex++;
             
@@ -2136,23 +1037,21 @@ Aquí está la actualización del código con el rango correcto:
             totalAnswersElement.textContent = currentQuestions.length;
             scorePercentageElement.textContent = `${percentage}%`;
             
-            // Mensaje motivacional personalizado
+            // Mensaje motivacional
             let motivationalMsg = '';
             if (percentage === 100) {
-                motivationalMsg = '¡Perfecto! 🏆 Has demostrado un dominio excelente del tema. ¡Sigue así!';
+                motivationalMsg = '¡Perfecto! 🏆 Has demostrado un dominio excelente del tema.';
             } else if (percentage >= 80) {
-                motivationalMsg = '¡Excelente trabajo! 🌟 Tu conocimiento es muy sólido. Con un poco más de práctica alcanzarás la perfección.';
+                motivationalMsg = '¡Excelente trabajo! 🌟 Tu conocimiento es muy sólido.';
             } else if (percentage >= 60) {
-                motivationalMsg = '¡Buen trabajo! 💪 Vas por buen camino. Revisa los conceptos que fallaste y mejorarás rápidamente.';
-            } else if (percentage >= 40) {
-                motivationalMsg = '¡No te desanimes! 📚 Cada error es una oportunidad de aprendizaje. Sigue estudiando y verás grandes mejoras.';
+                motivationalMsg = '¡Buen trabajo! 💪 Vas por buen camino.';
             } else {
-                motivationalMsg = '¡Ánimo! 🌱 Todos empezamos desde algún punto. Con dedicación y práctica constante, lograrás tus objetivos.';
+                motivationalMsg = '¡Sigue practicando! 📚 Cada error es una oportunidad de aprendizaje.';
             }
             
             motivationalMessageElement.textContent = motivationalMsg;
             
-            // Mostrar preguntas incorrectas para repasar
+            // Preguntas para repasar
             if (incorrectAnswers.length > 0) {
                 reviewItemsElement.innerHTML = '';
                 incorrectAnswers.forEach((item, index) => {
@@ -2165,44 +1064,41 @@ Aquí está la actualización del código con el rango correcto:
                     `;
                     reviewItemsElement.appendChild(reviewDiv);
                 });
+                document.getElementById('reviewList').style.display = 'block';
             } else {
                 document.getElementById('reviewList').style.display = 'none';
             }
             
-            // Mostrar estadísticas
             updateStatisticsTable();
         }
 
-        // Función para actualizar la tabla de estadísticas
+        // Función para actualizar tabla de estadísticas
         function updateStatisticsTable() {
             statisticsBody.innerHTML = '';
             
-            // Ordenar por ID
-            const sortedIds = Object.keys(questionStats).sort((a, b) => parseInt(a) - parseInt(b));
+            const sortedIds = Object.keys(sessionStats).sort((a, b) => parseInt(a) - parseInt(b));
             
             sortedIds.forEach(id => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${id}</td>
-                    <td>${questionStats[id].question}</td>
-                    <td>${questionStats[id].timesShown}</td>
+                    <td>${sessionStats[id].question}</td>
+                    <td>${sessionStats[id].timesShown}</td>
                 `;
                 statisticsBody.appendChild(row);
             });
         }
 
-        // Función para iniciar el quiz
+        // Función para iniciar quiz
         function startQuiz() {
             const numCards = parseInt(document.getElementById('numCards').value);
             category = document.getElementById('category').value;
             
-            // Verificar que hay datos cargados
             if (questionsData.length === 0) {
-                alert('Error: No se han cargado las preguntas del CSV. Por favor, asegúrate de cargar el archivo PreguntasFlash.csv con las 126 preguntas.');
+                alert('Error: No hay preguntas cargadas.');
                 return;
             }
             
-            // Seleccionar preguntas usando el nuevo sistema aleatorio con IDs 2-126
             currentQuestions = selectQuestionsByRandomIds(numCards, category);
             currentQuestionIndex = 0;
             score = 0;
@@ -2217,7 +1113,7 @@ Aquí está la actualización del código con el rango correcto:
             showQuestion();
         }
 
-        // Función para reiniciar el quiz
+        // Función para reiniciar
         function restartQuiz() {
             configPanel.style.display = 'block';
             quizContainer.style.display = 'none';
@@ -2229,17 +1125,9 @@ Aquí está la actualización del código con el rango correcto:
         nextBtn.addEventListener('click', nextQuestion);
         restartBtn.addEventListener('click', restartQuiz);
 
-        // Cargar estadísticas al inicio
+        // Cargar preguntas al iniciar
         window.addEventListener('load', () => {
-            if (Object.keys(questionStats).length > 0) {
-                console.log('Estadísticas cargadas:', questionStats);
-            }
-            
-            // IMPORTANTE: Aquí debes cargar los datos del CSV
-            // Por ejemplo, si tienes los datos en formato JSON:
-            // questionsData = [...]; // Cargar las 126 preguntas aquí
-            
-            console.log('Sistema preparado para seleccionar preguntas con IDs del 2 al 126');
+            loadQuestionsFromCSV();
         });
     </script>
 </body>
