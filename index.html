@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcards de Oposiciones - Estudio con IA</title>
+    <title>Flashcards de Oposiciones - Estudio Interactivo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,13 +35,6 @@
         .btn-secondary:hover {
             background-color: #2d3748;
         }
-        .btn-ai {
-            background-color: #5b21b6;
-            color: white;
-        }
-        .btn-ai:hover {
-            background-color: #4c1d95;
-        }
         .input-dark {
             background-color: #1a202c;
             border-color: #4a5568;
@@ -53,10 +46,6 @@
         .feedback-incorrect {
             background-color: #c53030;
             border-left-color: #fc8181;
-        }
-        .ai-response-card {
-            background-color: rgba(76, 29, 149, 0.3);
-            border-left: 4px solid #8b5cf6;
         }
         .spinner {
             border-top-color: #a78bfa;
@@ -82,10 +71,44 @@
         .csv-option:hover {
             border-color: #4299e1;
             background-color: #374151;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .csv-option.selected {
             border-color: #4299e1;
             background-color: #1e3a8a;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+        }
+        .response-section {
+            background-color: rgba(45, 55, 72, 0.5);
+            border-left: 4px solid;
+            padding: 1rem;
+            margin: 0.75rem 0;
+            border-radius: 0.5rem;
+        }
+        .response-answer {
+            border-left-color: #4299e1;
+        }
+        .response-reasoning {
+            border-left-color: #9f7aea;
+        }
+        .response-keywords {
+            border-left-color: #48bb78;
+        }
+        .response-analogy {
+            border-left-color: #ed8936;
+        }
+        .response-legal {
+            border-left-color: #ed64a6;
+        }
+        .section-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.375rem;
+            margin-right: 0.5rem;
         }
     </style>
 </head>
@@ -96,8 +119,8 @@
         <!-- 1. Pantalla de Selección de Materia -->
         <div id="setup-screen" class="card p-8 rounded-xl shadow-lg transition-opacity duration-500">
             <div class="text-center">
-                <h1 class="text-3xl font-bold text-white">Flashcards de Oposiciones</h1>
-                <p class="mt-2 text-slate-400">Selecciona tu materia de estudio</p>
+                <h1 class="text-3xl font-bold text-white">📚 Flashcards de Oposiciones</h1>
+                <p class="mt-2 text-slate-400">Sistema de estudio interactivo con preguntas aleatorias</p>
             </div>
             
             <div class="mt-8 space-y-6">
@@ -109,31 +132,31 @@
                 
                 <!-- Selección de materias -->
                 <div id="csv-selection" class="space-y-4">
-                    <h3 class="text-xl font-semibold text-white">Elige tu materia:</h3>
+                    <h3 class="text-xl font-semibold text-white">Selecciona tu materia de estudio:</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="csv-option p-4 rounded-lg" data-csv="./ADMINISTRATIVO.csv">
                             <h4 class="font-bold text-blue-300">📋 Derecho Administrativo</h4>
-                            <p class="text-sm text-slate-400">Procedimiento, régimen jurídico, contratos públicos</p>
+                            <p class="text-sm text-slate-400 mt-1">Procedimiento, régimen jurídico, contratos públicos</p>
                         </div>
                         <div class="csv-option p-4 rounded-lg" data-csv="./CONSTITUCIONAL.csv">
                             <h4 class="font-bold text-red-300">⚖️ Derecho Constitucional</h4>
-                            <p class="text-sm text-slate-400">Constitución, derechos fundamentales</p>
+                            <p class="text-sm text-slate-400 mt-1">Constitución, derechos fundamentales</p>
                         </div>
                         <div class="csv-option p-4 rounded-lg" data-csv="./CIVIL.csv">
                             <h4 class="font-bold text-green-300">🏛️ Derecho Civil</h4>
-                            <p class="text-sm text-slate-400">Personas, bienes, obligaciones</p>
+                            <p class="text-sm text-slate-400 mt-1">Personas, bienes, obligaciones, contratos</p>
                         </div>
                         <div class="csv-option p-4 rounded-lg" data-csv="./PENAL.csv">
                             <h4 class="font-bold text-purple-300">⚔️ Derecho Penal</h4>
-                            <p class="text-sm text-slate-400">Delitos, código penal, procedimiento</p>
+                            <p class="text-sm text-slate-400 mt-1">Delitos, código penal, procedimiento</p>
                         </div>
                         <div class="csv-option p-4 rounded-lg" data-csv="./LABORAL.csv">
                             <h4 class="font-bold text-yellow-300">👔 Derecho Laboral</h4>
-                            <p class="text-sm text-slate-400">Contratos, despidos, seguridad social</p>
+                            <p class="text-sm text-slate-400 mt-1">Contratos, despidos, seguridad social</p>
                         </div>
                         <div class="csv-option p-4 rounded-lg" data-csv="./TRIBUTARIO.csv">
                             <h4 class="font-bold text-orange-300">💰 Derecho Tributario</h4>
-                            <p class="text-sm text-slate-400">Impuestos, hacienda pública</p>
+                            <p class="text-sm text-slate-400 mt-1">Impuestos, hacienda pública</p>
                         </div>
                     </div>
                 </div>
@@ -141,12 +164,12 @@
                 <!-- Configuración del juego -->
                 <div id="config-section" class="hidden">
                     <div class="mb-4 p-4 bg-slate-900 rounded-lg">
-                        <h4 class="text-lg font-semibold text-white mb-2">Archivo seleccionado:</h4>
+                        <h4 class="text-lg font-semibold text-white mb-2">📂 Archivo seleccionado:</h4>
                         <p id="selected-file-info" class="text-blue-400 font-medium"></p>
                     </div>
                     <div>
                         <label for="num-questions" class="block text-sm font-medium text-slate-300 mb-2">
-                            Número de preguntas para el cuestionario
+                            🎯 Número de preguntas para el cuestionario
                         </label>
                         <input type="number" id="num-questions" 
                                class="input-dark w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -161,7 +184,7 @@
 
             <div class="mt-8">
                 <button id="start-button" class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-all" disabled>
-                    Empezar Cuestionario
+                    🚀 Empezar Cuestionario
                 </button>
             </div>
         </div>
@@ -170,7 +193,7 @@
         <div id="quiz-screen" class="hidden card p-8 rounded-xl shadow-lg transition-opacity duration-500">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white">
-                    Pregunta <span id="current-q-num"></span> de <span id="total-q-num"></span>
+                    📝 Pregunta <span id="current-q-num"></span> de <span id="total-q-num"></span>
                 </h2>
                 <div id="question-category" class="text-sm bg-blue-900 text-blue-300 font-semibold py-1 px-3 rounded-full"></div>
             </div>
@@ -183,7 +206,7 @@
                 <div class="relative">
                     <textarea id="user-answer" rows="3" 
                               class="input-dark w-full p-4 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                              placeholder="Escribe tu respuesta..."></textarea>
+                              placeholder="Escribe tu respuesta aquí..."></textarea>
                     <button id="mic-button" class="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 hover:text-blue-400" 
                             title="Contestar por voz">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -196,7 +219,7 @@
 
             <div class="mt-4">
                 <button id="verify-button" class="w-full btn-secondary font-bold py-3 px-4 rounded-lg transition-all">
-                    Ver Respuesta Correcta
+                    👁️ Ver Respuesta Correcta
                 </button>
             </div>
 
@@ -204,35 +227,71 @@
             <div id="feedback-section" class="hidden mt-6 space-y-4">
                 <div id="feedback-message" class="p-4 text-white font-bold rounded-lg border-l-4 text-center"></div>
                 
-                <div class="p-4 bg-slate-900 rounded-lg">
-                    <h4 class="font-bold text-slate-300">Respuesta Correcta:</h4>
-                    <p id="correct-answer-text" class="mt-1 text-slate-300"></p>
-                    <h4 class="font-bold text-slate-300 mt-3">Justificación:</h4>
-                    <p id="reasoning-text" class="mt-1 text-slate-400"></p>
+                <!-- Respuesta Estructurada -->
+                <div class="bg-slate-900 rounded-lg p-4">
+                    <h3 class="text-xl font-bold text-white mb-4 text-center">📖 Respuesta Completa</h3>
                     
-                    <div class="mt-4">
-                        <a id="legal-ref-link" href="#" target="_blank" rel="noopener noreferrer" 
-                           class="text-blue-400 hover:text-blue-300 hover:underline">
-                            <span class="font-bold">📋 Referencia legal:</span>
-                            <span id="legal-ref-text"></span>
-                        </a>
+                    <!-- Respuesta Principal -->
+                    <div class="response-section response-answer">
+                        <div class="flex items-start">
+                            <span class="section-icon bg-blue-900 text-blue-300">💡</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-blue-300 mb-2">Respuesta Correcta</h4>
+                                <div id="correct-answer-text" class="text-slate-300"></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Explicación con IA -->
-                <button id="ai-enhance-button" class="w-full btn-ai font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
-                    Explicación Detallada 🤖
-                </button>
-                <div id="ai-response-container" class="hidden p-4 rounded-lg ai-response-card">
-                    <div id="ai-spinner" class="flex items-center justify-center gap-2 text-violet-300">
-                        <div class="spinner h-5 w-5 rounded-full border-2 border-transparent"></div>
-                        Generando explicación...
+
+                    <!-- Palabras Clave -->
+                    <div id="keywords-section" class="response-section response-keywords hidden">
+                        <div class="flex items-start">
+                            <span class="section-icon bg-green-900 text-green-300">🔑</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-green-300 mb-2">Palabras Clave</h4>
+                                <div id="keywords-text" class="text-slate-300"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="ai-response-content"></div>
+
+                    <!-- Analogía -->
+                    <div id="analogy-section" class="response-section response-analogy hidden">
+                        <div class="flex items-start">
+                            <span class="section-icon bg-orange-900 text-orange-300">🎯</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-orange-300 mb-2">Analogía</h4>
+                                <div id="analogy-text" class="text-slate-300"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Justificación -->
+                    <div class="response-section response-reasoning">
+                        <div class="flex items-start">
+                            <span class="section-icon bg-purple-900 text-purple-300">📚</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-purple-300 mb-2">Justificación</h4>
+                                <div id="reasoning-text" class="text-slate-300"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Referencia Legal -->
+                    <div id="legal-section" class="response-section response-legal">
+                        <div class="flex items-start">
+                            <span class="section-icon bg-pink-900 text-pink-300">⚖️</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-pink-300 mb-2">Referencia Legal</h4>
+                                <a id="legal-ref-link" href="#" target="_blank" rel="noopener noreferrer" 
+                                   class="text-blue-400 hover:text-blue-300 hover:underline">
+                                    <span id="legal-ref-text"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Botones de evaluación -->
-                <div id="evaluation-buttons" class="grid grid-cols-2 gap-4">
+                <div id="evaluation-buttons" class="grid grid-cols-2 gap-4 mt-6">
                     <button id="correct-btn" class="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-all">
                         ✅ ¡La acerté!
                     </button>
@@ -246,26 +305,38 @@
         <!-- 3. Pantalla de Resultados -->
         <div id="results-screen" class="hidden card p-8 rounded-xl shadow-lg transition-opacity duration-500">
             <div class="text-center">
-                <h2 class="text-3xl font-bold text-white">¡Sesión Finalizada!</h2>
+                <h2 class="text-3xl font-bold text-white">🎉 ¡Sesión Finalizada!</h2>
                 <p id="final-message" class="mt-4 text-lg text-slate-300"></p>
             </div>
             
-            <div class="mt-8 p-4 bg-slate-900 rounded-lg text-center">
-                <h3 class="text-xl font-bold text-white mb-2">Tus Resultados</h3>
-                <div class="flex justify-center gap-8 text-2xl">
-                    <div><span class="font-bold text-green-400" id="correct-count"></span> Correctas</div>
-                    <div><span class="font-bold text-red-400" id="incorrect-count"></span> Incorrectas</div>
+            <div class="mt-8 p-6 bg-slate-900 rounded-lg text-center">
+                <h3 class="text-xl font-bold text-white mb-4">📊 Tus Resultados</h3>
+                <div class="flex justify-center gap-8 text-3xl">
+                    <div>
+                        <span class="font-bold text-green-400" id="correct-count"></span>
+                        <p class="text-sm text-slate-400 mt-1">Correctas</p>
+                    </div>
+                    <div>
+                        <span class="font-bold text-red-400" id="incorrect-count"></span>
+                        <p class="text-sm text-slate-400 mt-1">Incorrectas</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div id="percentage-bar" class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
+                        <div id="percentage-fill" class="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-1000"></div>
+                    </div>
+                    <p class="text-sm text-slate-400 mt-2">Porcentaje de acierto: <span id="percentage-text" class="font-bold"></span>%</p>
                 </div>
             </div>
             
             <div id="review-section" class="mt-6 hidden">
-                <h3 class="text-xl font-bold text-white mb-4">Conceptos a Repasar</h3>
+                <h3 class="text-xl font-bold text-white mb-4">📋 Conceptos a Repasar</h3>
                 <div id="review-list" class="space-y-4 max-h-60 overflow-y-auto pr-2"></div>
             </div>
             
             <div class="mt-8">
                 <button id="restart-button" class="w-full btn-primary font-bold py-3 px-6 rounded-lg transition-all">
-                    Empezar de Nuevo
+                    🔄 Empezar de Nuevo
                 </button>
             </div>
         </div>
@@ -295,13 +366,14 @@
               feedbackSection = document.getElementById('feedback-section'),
               feedbackMessage = document.getElementById('feedback-message'),
               correctAnswerText = document.getElementById('correct-answer-text'),
+              keywordsSection = document.getElementById('keywords-section'),
+              keywordsText = document.getElementById('keywords-text'),
+              analogySection = document.getElementById('analogy-section'),
+              analogyText = document.getElementById('analogy-text'),
               reasoningText = document.getElementById('reasoning-text'),
+              legalSection = document.getElementById('legal-section'),
               legalRefLink = document.getElementById('legal-ref-link'),
               legalRefText = document.getElementById('legal-ref-text'),
-              aiEnhanceButton = document.getElementById('ai-enhance-button'),
-              aiResponseContainer = document.getElementById('ai-response-container'),
-              aiSpinner = document.getElementById('ai-spinner'),
-              aiResponseContent = document.getElementById('ai-response-content'),
               evalButtons = document.getElementById('evaluation-buttons'),
               correctBtn = document.getElementById('correct-btn'),
               incorrectBtn = document.getElementById('incorrect-btn'),
@@ -310,6 +382,8 @@
               finalMessage = document.getElementById('final-message'),
               correctCount = document.getElementById('correct-count'),
               incorrectCount = document.getElementById('incorrect-count'),
+              percentageBar = document.getElementById('percentage-fill'),
+              percentageText = document.getElementById('percentage-text'),
               reviewSection = document.getElementById('review-section'),
               reviewList = document.getElementById('review-list'),
               restartButton = document.getElementById('restart-button');
@@ -414,8 +488,8 @@
                 showConfig();
                 
                 const fileName = CSV_FILES[selectedCSV];
-                selectedFileInfo.textContent = `${fileName} - ${allQuestions.length} preguntas`;
-                infoBox.textContent = `¡Éxito! Preguntas mezcladas completamente al azar.`;
+                selectedFileInfo.textContent = `${fileName} - ${allQuestions.length} preguntas disponibles`;
+                infoBox.innerHTML = `✅ <strong>¡Éxito!</strong> Las preguntas han sido mezcladas completamente al azar.`;
                 infoBox.classList.remove('hidden');
                 
                 numQuestionsInput.max = allQuestions.length;
@@ -453,20 +527,20 @@
         // Formatear referencia legal
         const formatLegalReferenceText = (questionData) => {
             const lawMapping = {
-                'BOE-A-2015-10565': 'Ley 39/2015',
-                'BOE-A-2015-10566': 'Ley 40/2015',
-                'BOE-A-1978-31229': 'CE',
-                'BOE-A-2017-12902': 'LCSP',
-                'BOE-A-2003-23186': 'LPAP',
-                'BOE-A-2013-12887': 'Ley 19/2013',
+                'BOE-A-2015-10565': 'Ley 39/2015 del Procedimiento Administrativo Común',
+                'BOE-A-2015-10566': 'Ley 40/2015 de Régimen Jurídico del Sector Público',
+                'BOE-A-1978-31229': 'Constitución Española',
+                'BOE-A-2017-12902': 'Ley de Contratos del Sector Público',
+                'BOE-A-2003-23186': 'Ley del Patrimonio de las Administraciones Públicas',
+                'BOE-A-2013-12887': 'Ley 19/2013 de Transparencia',
                 'BOE-A-1889-4763': 'Código Civil',
                 'BOE-A-2007-6115': 'Ley de Igualdad',
-                'BOE-A-1954-6364': 'LEF',
-                'BOE-A-2007-7788': 'EBEP'
+                'BOE-A-1954-6364': 'Ley de Expropiación Forzosa',
+                'BOE-A-2007-7788': 'Estatuto Básico del Empleado Público'
             };
 
             const url = questionData.Legal_Reference;
-            if (!url) return "Sin referencia";
+            if (!url) return "Sin referencia legal específica";
             
             let lawText = '';
             let articleText = '';
@@ -478,17 +552,17 @@
 
             const articleMatch = url.match(/#a(\d+)/);
             if (articleMatch) {
-                articleText = `, art. ${articleMatch[1]}`;
+                articleText = ` - Artículo ${articleMatch[1]}`;
             }
 
-            return lawText ? `${lawText}${articleText}` : "Ver disposición";
+            return lawText ? `${lawText}${articleText}` : "Ver disposición en el BOE";
         };
 
         // Iniciar juego
         const startGame = () => {
             const num = parseInt(numQuestionsInput.value);
             if (isNaN(num) || num <= 0 || num > allQuestions.length) {
-                errorBox.textContent = `Introduce un número válido entre 1 y ${allQuestions.length}.`;
+                errorBox.textContent = `Por favor, introduce un número válido entre 1 y ${allQuestions.length}.`;
                 errorBox.classList.remove('hidden');
                 return;
             }
@@ -508,6 +582,33 @@
             displayQuestion();
         };
 
+        // Procesar y formatear respuesta
+        const processAnswer = (answer) => {
+            const sections = {
+                main: '',
+                keywords: '',
+                analogy: ''
+            };
+            
+            // Buscar palabras clave
+            const keywordsMatch = answer.match(/Palabras clave:(.*?)(?=Analogía:|$)/s);
+            if (keywordsMatch) {
+                sections.keywords = keywordsMatch[1].trim();
+                answer = answer.replace(keywordsMatch[0], '');
+            }
+            
+            // Buscar analogía
+            const analogyMatch = answer.match(/Analogía:(.*?)$/s);
+            if (analogyMatch) {
+                sections.analogy = analogyMatch[1].trim();
+                answer = answer.replace(analogyMatch[0], '');
+            }
+            
+            sections.main = answer.trim();
+            
+            return sections;
+        };
+
         // Mostrar pregunta actual
         const displayQuestion = () => {
             if (currentQuestionIndex >= quizQuestions.length) {
@@ -521,21 +622,39 @@
             category.textContent = q.Category;
             questionText.textContent = q.Question;
             
-            // Formatear respuesta
-            let formattedAnswer = q.Answer
-                .replace(/Palabras clave:/g, '<br><br><strong>Palabras clave:</strong>')
-                .replace(/Analogía:/g, '<br><br><strong>Analogía:</strong>');
-            correctAnswerText.innerHTML = formattedAnswer;
+            // Procesar y estructurar la respuesta
+            const sections = processAnswer(q.Answer);
             
-            reasoningText.textContent = q.Reasoning;
+            // Respuesta principal
+            correctAnswerText.innerHTML = sections.main;
+            
+            // Palabras clave
+            if (sections.keywords) {
+                keywordsText.innerHTML = sections.keywords;
+                keywordsSection.classList.remove('hidden');
+            } else {
+                keywordsSection.classList.add('hidden');
+            }
+            
+            // Analogía
+            if (sections.analogy) {
+                analogyText.innerHTML = sections.analogy;
+                analogySection.classList.remove('hidden');
+            } else {
+                analogySection.classList.add('hidden');
+            }
+            
+            // Justificación
+            reasoningText.innerHTML = q.Reasoning || 'No se proporciona justificación adicional.';
             
             // Referencia legal
             if (q.Legal_Reference) {
                 legalRefLink.href = q.Legal_Reference;
                 legalRefText.textContent = formatLegalReferenceText(q);
                 legalRefLink.style.display = 'inline-block';
+                legalSection.classList.remove('hidden');
             } else {
-                legalRefLink.style.display = 'none';
+                legalSection.classList.add('hidden');
             }
 
             // Actualizar contadores
@@ -545,9 +664,6 @@
             // Resetear interfaz
             userAnswer.value = '';
             feedbackSection.classList.add('hidden');
-            aiResponseContainer.classList.add('hidden');
-            aiResponseContent.innerHTML = '';
-            aiEnhanceButton.classList.remove('hidden');
             verifyButton.classList.remove('hidden');
             evalButtons.classList.remove('hidden');
         };
@@ -565,11 +681,11 @@
             
             if (isCorrect) {
                 correctAnswers.push(quizQuestions[currentQuestionIndex]);
-                feedbackMessage.textContent = '¡Excelente! Respuesta correcta. 🎉';
+                feedbackMessage.innerHTML = '✅ <strong>¡Excelente!</strong> Has acertado la respuesta.';
                 feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-correct';
             } else {
                 incorrectAnswers.push(quizQuestions[currentQuestionIndex]);
-                feedbackMessage.textContent = '¡Ánimo! Lo importante es aprender. 💪';
+                feedbackMessage.innerHTML = '❌ <strong>¡No te preocupes!</strong> Lo importante es aprender.';
                 feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-incorrect';
             }
             feedbackMessage.classList.remove('hidden');
@@ -580,64 +696,51 @@
                 displayQuestion();
             }, 2000);
         };
-        
-        // Explicación con IA (simulada)
-        const getAIEnhancement = async () => {
-            const q = quizQuestions[currentQuestionIndex];
-            
-            aiEnhanceButton.classList.add('hidden');
-            aiResponseContainer.classList.remove('hidden');
-            aiSpinner.classList.remove('hidden');
-            aiResponseContent.innerHTML = '';
-
-            try {
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                const mockResponse = `
-                    <h5 class="font-bold text-violet-300 mb-3">🧠 Explicación Detallada:</h5>
-                    <div class="space-y-3 text-slate-300">
-                        <p><strong>📚 Concepto clave:</strong> Esta pregunta trata sobre <strong>${q.Category}</strong>. El principio fundamental es que ${q.Answer.split('.')[0].toLowerCase()}.</p>
-                        <p><strong>🏛️ Ejemplo práctico:</strong> Imagina que un ciudadano presenta una solicitud en el ayuntamiento. Este principio garantiza que la administración debe actuar de manera transparente y justa.</p>
-                        <p><strong>💡 Truco para recordar:</strong> Piensa en esta norma como una "garantía de protección" que siempre favorece la seguridad jurídica del ciudadano.</p>
-                        <p><strong>⚖️ Importancia:</strong> Este concepto es fundamental en las oposiciones porque aparece en múltiples contextos del derecho administrativo español.</p>
-                    </div>
-                `;
-                
-                aiResponseContent.innerHTML = mockResponse;
-                
-            } catch (error) {
-                aiResponseContent.innerHTML = `<p class="text-red-400">Error al generar explicación: ${error.message}</p>`;
-            } finally {
-                aiSpinner.classList.add('hidden');
-            }
-        };
 
         // Mostrar resultados
         const showResults = () => {
             quizScreen.classList.add('hidden');
             resultsScreen.classList.remove('hidden');
             
-            correctCount.textContent = correctAnswers.length;
-            incorrectCount.textContent = incorrectAnswers.length;
+            const total = quizQuestions.length;
+            const correct = correctAnswers.length;
+            const incorrect = incorrectAnswers.length;
+            const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
             
-            const percentage = quizQuestions.length > 0 ? (correctAnswers.length / quizQuestions.length) * 100 : 0;
+            correctCount.textContent = correct;
+            incorrectCount.textContent = incorrect;
+            percentageText.textContent = percentage;
             
-            if (percentage >= 80) {
-                finalMessage.textContent = "¡Magnífico trabajo! Tu esfuerzo está dando frutos. 🌟";
+            // Animar barra de porcentaje
+            setTimeout(() => {
+                percentageBar.style.width = percentage + '%';
+            }, 100);
+            
+            // Mensaje personalizado según el resultado
+            if (percentage >= 90) {
+                finalMessage.innerHTML = '🌟 <strong>¡Impresionante!</strong> Dominas perfectamente el tema.';
+            } else if (percentage >= 70) {
+                finalMessage.innerHTML = '🎯 <strong>¡Muy bien!</strong> Tienes un buen dominio del tema.';
             } else if (percentage >= 50) {
-                finalMessage.textContent = "¡Buen progreso! Estás construyendo una base sólida. 💪";
+                finalMessage.innerHTML = '💪 <strong>¡Buen trabajo!</strong> Vas por buen camino, sigue practicando.';
             } else {
-                finalMessage.textContent = "Cada error es un paso hacia el éxito. ¡Sigue adelante! 🚀";
+                finalMessage.innerHTML = '📚 <strong>¡Ánimo!</strong> Cada error es una oportunidad de aprendizaje.';
             }
             
             // Sección de repaso
             if (incorrectAnswers.length > 0) {
-                reviewList.innerHTML = incorrectAnswers.map((q, i) => 
-                    `<div class="p-3 bg-slate-900 rounded-lg">
-                        <p class="font-semibold text-slate-300">${i + 1}. ${q.Question}</p>
-                        <p class="mt-1 text-green-400"><strong>R:</strong> ${q.Answer}</p>
-                    </div>`
-                ).join('');
+                reviewList.innerHTML = incorrectAnswers.map((q, i) => {
+                    const sections = processAnswer(q.Answer);
+                    return `
+                    <div class="p-4 bg-slate-900 rounded-lg">
+                        <p class="font-semibold text-slate-300 mb-2">
+                            <span class="text-red-400">${i + 1}.</span> ${q.Question}
+                        </p>
+                        <div class="pl-4 border-l-2 border-green-500">
+                            <p class="text-green-400 text-sm"><strong>Respuesta:</strong> ${sections.main}</p>
+                        </div>
+                    </div>`;
+                }).join('');
                 reviewSection.classList.remove('hidden');
             } else {
                 reviewSection.classList.add('hidden');
@@ -649,7 +752,7 @@
             resultsScreen.classList.add('hidden');
             setupScreen.classList.remove('hidden');
             
-            // Resetear selección
+            // Resetear a selección inicial
             csvSelection.classList.remove('hidden');
             configSection.classList.add('hidden');
             loadingSection.classList.add('hidden');
@@ -671,6 +774,9 @@
             correctAnswers = [];
             incorrectAnswers = [];
             currentQuestionIndex = 0;
+            
+            // Resetear barra de porcentaje
+            percentageBar.style.width = '0%';
         };
 
         // --- EVENT LISTENERS ---
@@ -694,7 +800,6 @@
 
         startButton.addEventListener('click', startGame);
         verifyButton.addEventListener('click', showFeedback);
-        aiEnhanceButton.addEventListener('click', getAIEnhancement);
         correctBtn.addEventListener('click', () => handleEvaluation(true));
         incorrectBtn.addEventListener('click', () => handleEvaluation(false));
         restartButton.addEventListener('click', restartApp);
@@ -717,12 +822,12 @@
             
             recognition.onresult = (event) => {
                 userAnswer.value = event.results[0][0].transcript;
-                micStatus.textContent = 'Respuesta capturada ✓';
+                micStatus.textContent = '✅ Respuesta capturada';
                 setTimeout(() => { micStatus.textContent = ''; }, 2000);
             };
             
             recognition.onerror = (event) => {
-                micStatus.textContent = `Error: ${event.error}`;
+                micStatus.textContent = `❌ Error: ${event.error}`;
                 setTimeout(() => { micStatus.textContent = ''; }, 3000);
             };
             
@@ -736,7 +841,7 @@
         }
 
         // --- INICIAR APLICACIÓN ---
-        console.log('Flashcards de Oposiciones cargado correctamente');
+        console.log('✅ Flashcards de Oposiciones cargado correctamente');
     });
     </script>
 </body>
