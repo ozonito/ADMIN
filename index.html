@@ -101,6 +101,14 @@
         .response-legal {
             border-left-color: #ed64a6;
         }
+        .response-mnemonic {
+            border-left-color: #f6e05e;
+            background-color: rgba(246, 224, 94, 0.1);
+        }
+        .response-example {
+            border-left-color: #4fd1c5;
+            background-color: rgba(79, 209, 197, 0.1);
+        }
         .section-icon {
             display: inline-flex;
             align-items: center;
@@ -253,6 +261,28 @@
                         </div>
                     </div>
 
+                    <!-- Mnemotecnia -->
+                    <div id="mnemonic-section" class="response-section response-mnemonic hidden">
+                        <div class="flex items-start">
+                            <span class="section-icon bg-yellow-900 text-yellow-300">🧠</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-yellow-300 mb-2">Mnemotecnia</h4>
+                                <div id="mnemonic-text" class="text-slate-300"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ejemplo -->
+                    <div id="example-section" class="response-section response-example hidden">
+                        <div class="flex items-start">
+                            <span class="section-icon bg-teal-900 text-teal-300">📌</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-teal-300 mb-2">Ejemplo</h4>
+                                <div id="example-text" class="text-slate-300"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Analogía -->
                     <div id="analogy-section" class="response-section response-analogy hidden">
                         <div class="flex items-start">
@@ -368,6 +398,10 @@
               correctAnswerText = document.getElementById('correct-answer-text'),
               keywordsSection = document.getElementById('keywords-section'),
               keywordsText = document.getElementById('keywords-text'),
+              mnemonicSection = document.getElementById('mnemonic-section'),
+              mnemonicText = document.getElementById('mnemonic-text'),
+              exampleSection = document.getElementById('example-section'),
+              exampleText = document.getElementById('example-text'),
               analogySection = document.getElementById('analogy-section'),
               analogyText = document.getElementById('analogy-text'),
               reasoningText = document.getElementById('reasoning-text'),
@@ -587,18 +621,34 @@
             const sections = {
                 main: '',
                 keywords: '',
+                mnemonic: '',
+                example: '',
                 analogy: ''
             };
             
             // Buscar palabras clave
-            const keywordsMatch = answer.match(/Palabras clave:(.*?)(?=Analogía:|$)/s);
+            const keywordsMatch = answer.match(/Palabras clave:(.*?)(?=Mnemotecnia:|Ejemplo:|Analogía:|$)/si);
             if (keywordsMatch) {
                 sections.keywords = keywordsMatch[1].trim();
                 answer = answer.replace(keywordsMatch[0], '');
             }
             
+            // Buscar mnemotecnia
+            const mnemonicMatch = answer.match(/Mnemotecnia:(.*?)(?=Ejemplo:|Analogía:|Palabras clave:|$)/si);
+            if (mnemonicMatch) {
+                sections.mnemonic = mnemonicMatch[1].trim();
+                answer = answer.replace(mnemonicMatch[0], '');
+            }
+            
+            // Buscar ejemplo
+            const exampleMatch = answer.match(/Ejemplo:(.*?)(?=Mnemotecnia:|Analogía:|Palabras clave:|$)/si);
+            if (exampleMatch) {
+                sections.example = exampleMatch[1].trim();
+                answer = answer.replace(exampleMatch[0], '');
+            }
+            
             // Buscar analogía
-            const analogyMatch = answer.match(/Analogía:(.*?)$/s);
+            const analogyMatch = answer.match(/Analogía:(.*?)(?=Mnemotecnia:|Ejemplo:|Palabras clave:|$)/si);
             if (analogyMatch) {
                 sections.analogy = analogyMatch[1].trim();
                 answer = answer.replace(analogyMatch[0], '');
@@ -634,6 +684,22 @@
                 keywordsSection.classList.remove('hidden');
             } else {
                 keywordsSection.classList.add('hidden');
+            }
+            
+            // Mnemotecnia
+            if (sections.mnemonic) {
+                mnemonicText.innerHTML = sections.mnemonic;
+                mnemonicSection.classList.remove('hidden');
+            } else {
+                mnemonicSection.classList.add('hidden');
+            }
+            
+            // Ejemplo
+            if (sections.example) {
+                exampleText.innerHTML = sections.example;
+                exampleSection.classList.remove('hidden');
+            } else {
+                exampleSection.classList.add('hidden');
             }
             
             // Analogía
