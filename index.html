@@ -83,16 +83,29 @@
         <div id="setup-screen" class="card p-8 rounded-xl shadow-lg transition-opacity duration-500">
             <div class="text-center">
                 <h1 class="text-3xl font-bold text-white">Flashcards de Oposiciones con IA</h1>
-                <p class="mt-2 text-slate-400">Preparando tu banco de preguntas administrativas...</p>
+                <p class="mt-2 text-slate-400">Selecciona tu materia y configura tu cuestionario</p>
             </div>
             
             <div class="mt-8 space-y-6">
-                <div id="loading-section" class="text-center">
+                <div id="loading-section" class="text-center hidden">
                     <div class="loading-spinner mx-auto mb-4"></div>
-                    <p class="text-slate-300">Cargando preguntas desde GitHub...</p>
+                    <p class="text-slate-300">Cargando preguntas...</p>
                 </div>
                 
-                <div id="config-section" class="hidden">
+                <div id="config-section">
+                    <div class="mb-4">
+                        <label for="csv-selector" class="block text-sm font-medium text-slate-300 mb-2">Selecciona el archivo de preguntas</label>
+                        <select id="csv-selector" class="input-dark w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Selecciona una materia...</option>
+                            <option value="./ADMINISTRATIVO.csv">Derecho Administrativo</option>
+                            <option value="./CONSTITUCIONAL.csv">Derecho Constitucional</option>
+                            <option value="./CIVIL.csv">Derecho Civil</option>
+                            <option value="./PENAL.csv">Derecho Penal</option>
+                            <option value="./LABORAL.csv">Derecho Laboral</option>
+                            <option value="./MERCANTIL.csv">Derecho Mercantil</option>
+                            <option value="./TRIBUTARIO.csv">Derecho Tributario</option>
+                        </select>
+                    </div>
                     <div>
                         <label for="num-questions" class="block text-sm font-medium text-slate-300">Número de preguntas para el cuestionario</label>
                         <input type="number" id="num-questions" class="input-dark mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" placeholder="Ej: 10" disabled>
@@ -146,7 +159,7 @@
                     
                     <div class="mt-4">
                         <a id="legal-ref-link" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline">
-                            <span class="font-bold">📖 Referencia legal:</span>
+                            <span class="font-bold">📋 Referencia legal:</span>
                             <span id="legal-ref-text"></span>
                         </a>
                     </div>
@@ -166,7 +179,6 @@
                     <button id="correct-btn" class="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-all">✅ ¡La acerté!</button>
                     <button id="incorrect-btn" class="flex items-center justify-center gap-2 w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-all">❌ A repasar</button>
                 </div>
-                <button id="next-question-button" class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-all hidden">Siguiente Pregunta</button>
             </div>
         </div>
 
@@ -213,6 +225,7 @@
               resultsScreen = document.getElementById('results-screen'),
               loadingSection = document.getElementById('loading-section'),
               configSection = document.getElementById('config-section'),
+              csvSelector = document.getElementById('csv-selector'),
               numQuestionsInput = document.getElementById('num-questions'),
               startButton = document.getElementById('start-button'),
               errorBox = document.getElementById('error-box'),
@@ -236,7 +249,6 @@
               evalButtons = document.getElementById('evaluation-buttons'),
               correctBtn = document.getElementById('correct-btn'),
               incorrectBtn = document.getElementById('incorrect-btn'),
-              nextButton = document.getElementById('next-question-button'),
               currentQNum = document.getElementById('current-q-num'),
               totalQNum = document.getElementById('total-q-num'),
               finalMessage = document.getElementById('final-message'),
@@ -250,7 +262,17 @@
         // --- ESTADO DE LA APP ---
         let allQuestions = [], quizQuestions = [], correctAnswers = [], incorrectAnswers = [], currentQuestionIndex = 0;
         const OCCURRENCE_KEY = 'flashcardOccurrences';
-        const CSV_URL = './ADMINISTRATIVO.csv'; // Archivo CSV en el mismo directorio
+
+        // Archivos CSV disponibles
+        const CSV_FILES = {
+            './ADMINISTRATIVO.csv': 'Derecho Administrativo',
+            './CONSTITUCIONAL.csv': 'Derecho Constitucional', 
+            './CIVIL.csv': 'Derecho Civil',
+            './PENAL.csv': 'Derecho Penal',
+            './LABORAL.csv': 'Derecho Laboral',
+            './MERCANTIL.csv': 'Derecho Mercantil',
+            './TRIBUTARIO.csv': 'Derecho Tributario'
+        };
 
         // --- LÓGICA DE LA APP ---
 
@@ -324,10 +346,21 @@
             return questions;
         };
 
-        // Función para cargar CSV desde GitHub
-        const loadCSVFromGitHub = async () => {
+        // Función para cargar CSV seleccionado
+        const loadSelectedCSV = async () => {
+            const selectedFile = csvSelector.value;
+            if (!selectedFile) {
+                errorBox.textContent = 'Por favor selecciona un archivo CSV.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
             try {
-                const response = await fetch(CSV_URL);
+                loadingSection.classList.remove('hidden');
+                configSection.classList.add('hidden');
+                errorBox.classList.add('hidden');
+                
+                const response = await fetch(selectedFile);
                 if (!response.ok) {
                     throw new Error(`Error al cargar el archivo: ${response.status} ${response.statusText}`);
                 }
@@ -339,6 +372,12 @@
                     throw new Error("No se pudieron procesar las preguntas. Revisa el formato del CSV.");
                 }
 
+                // Shuffle completamente aleatorio usando Fisher-Yates
+                for (let i = allQuestions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+                }
+
                 occurrenceTracker.init(allQuestions);
                 
                 // Ocultar loading y mostrar configuración
@@ -346,21 +385,33 @@
                 configSection.classList.remove('hidden');
                 
                 // Mostrar información de éxito
-                infoBox.textContent = `¡Éxito! Se han cargado ${allQuestions.length} preguntas de derecho administrativo.`;
+                const fileName = CSV_FILES[selectedFile];
+                infoBox.textContent = `¡Éxito! Se han cargado ${allQuestions.length} preguntas de ${fileName}.`;
                 infoBox.classList.remove('hidden');
                 
                 // Configurar input de número de preguntas
                 numQuestionsInput.max = allQuestions.length;
-                numQuestionsInput.value = Math.min(10, allQuestions.length); // Valor por defecto
+                numQuestionsInput.value = Math.min(10, allQuestions.length);
                 numQuestionsInput.disabled = false;
                 startButton.disabled = false;
 
             } catch (error) {
                 console.error('Error loading CSV:', error);
                 loadingSection.classList.add('hidden');
+                configSection.classList.remove('hidden');
                 errorBox.textContent = `Error al cargar las preguntas: ${error.message}`;
                 errorBox.classList.remove('hidden');
             }
+        };
+
+        // Algoritmo Fisher-Yates para shuffle completamente aleatorio
+        const shuffleArray = (array) => {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
         };
 
         const formatLegalReferenceText = (questionData) => {
@@ -409,12 +460,11 @@
             incorrectAnswers = [];
             currentQuestionIndex = 0;
             
-            // Seleccionar preguntas aleatorias
-            const indices = new Set();
-            while (indices.size < num) {
-                indices.add(Math.floor(Math.random() * allQuestions.length));
-            }
-            quizQuestions = Array.from(indices).map(i => allQuestions[i]);
+            // Selección completamente aleatoria usando Fisher-Yates
+            const shuffled = shuffleArray(allQuestions);
+            
+            // Tomar las primeras 'num' preguntas del array mezclado
+            quizQuestions = shuffled.slice(0, num);
             
             // Cambiar pantalla
             setupScreen.classList.add('hidden');
@@ -463,7 +513,6 @@
             aiResponseContent.innerHTML = '';
             aiEnhanceButton.classList.remove('hidden');
             verifyButton.classList.remove('hidden');
-            nextButton.classList.add('hidden');
             evalButtons.classList.remove('hidden');
         };
         
@@ -475,7 +524,6 @@
 
         const handleEvaluation = (isCorrect) => {
             evalButtons.classList.add('hidden');
-            nextButton.classList.remove('hidden');
             
             if (isCorrect) {
                 correctAnswers.push(quizQuestions[currentQuestionIndex]);
@@ -487,6 +535,12 @@
                 feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-incorrect';
             }
             feedbackMessage.classList.remove('hidden');
+            
+            // Pasar automáticamente a la siguiente pregunta después de 2 segundos
+            setTimeout(() => {
+                currentQuestionIndex++;
+                displayQuestion();
+            }, 2000);
         };
         
         const getAIEnhancement = async () => {
@@ -501,7 +555,7 @@
                 await new Promise(resolve => setTimeout(resolve, 2000)); // Simular delay
                 
                 const mockResponse = `
-                    <h5 class="font-bold text-violet-300 mb-2">💡 Explicación Adicional:</h5>
+                    <h5 class="font-bold text-violet-300 mb-2">🧠 Explicación Adicional:</h5>
                     <p class="text-slate-300 mb-3">
                         Esta pregunta se centra en <strong>${q.Category}</strong>. 
                         El concepto clave aquí es entender que ${q.Answer.split('.')[0].toLowerCase()}.
@@ -517,29 +571,6 @@
                 `;
                 
                 aiResponseContent.innerHTML = mockResponse;
-                
-                // Para implementar la API real de Google Gemini, descomenta y configura:
-                /*
-                const prompt = `Eres un tutor experto en derecho administrativo español. La siguiente es una pregunta de oposiciones. Proporciona una explicación mejorada, clara y concisa para un opositor. Puedes añadir ejemplos prácticos si ayuda a la comprensión. Mantén un tono motivador y de apoyo.
-
-                Pregunta: "${q.Question}"
-                Respuesta Correcta: "${q.Answer}"
-                Justificación Original: "${q.Reasoning}"
-
-                Tu explicación mejorada:`;
-
-                const apiKey = "TU_API_KEY_AQUI"; // Reemplazar con tu API key
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ role: "user", parts: [{ text: prompt }] }]
-                    })
-                });
-                
-                const result = await response.json();
-                // Procesar respuesta...
-                */
                 
             } catch (error) {
                 aiResponseContent.innerHTML = `<p class="text-red-400">Error al contactar con la IA: ${error.message}</p>`;
@@ -592,17 +623,22 @@
             resultsScreen.classList.add('hidden');
             setupScreen.classList.remove('hidden');
             
-            // Mostrar configuración directamente (el CSV ya está cargado)
+            // Mostrar configuración directamente 
             loadingSection.classList.add('hidden');
             configSection.classList.remove('hidden');
             
-            // Resetear inputs
-            numQuestionsInput.value = Math.min(10, allQuestions.length);
+            // Resetear selector y inputs
+            csvSelector.value = '';
+            numQuestionsInput.value = '';
+            numQuestionsInput.disabled = true;
+            startButton.disabled = true;
             
-            // Ocultar mensajes de error
+            // Ocultar mensajes
             errorBox.classList.add('hidden');
+            infoBox.classList.add('hidden');
             
             // Resetear datos
+            allQuestions = [];
             quizQuestions = [];
             correctAnswers = [];
             incorrectAnswers = [];
@@ -615,11 +651,10 @@
         aiEnhanceButton.addEventListener('click', getAIEnhancement);
         correctBtn.addEventListener('click', () => handleEvaluation(true));
         incorrectBtn.addEventListener('click', () => handleEvaluation(false));
-        nextButton.addEventListener('click', () => {
-            currentQuestionIndex++;
-            displayQuestion();
-        });
         restartButton.addEventListener('click', restartApp);
+
+        // Agregar listener para selector de CSV
+        csvSelector.addEventListener('change', loadSelectedCSV);
 
         // Reconocimiento de voz
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -630,7 +665,7 @@
             
             micButton.addEventListener('click', () => {
                 try {
-                    micStatus.textContent = '🎙️ Escuchando...';
+                    micStatus.textContent = '🎤 Escuchando...';
                     recognition.start();
                 } catch(e) {
                     micStatus.textContent = 'El micrófono ya está activo.';
@@ -649,7 +684,7 @@
             };
             
             recognition.onend = () => {
-                if (micStatus.textContent === '🎙️ Escuchando...') {
+                if (micStatus.textContent === '🎤 Escuchando...') {
                     micStatus.textContent = '';
                 }
             };
@@ -658,8 +693,9 @@
         }
 
         // --- INICIAR APLICACIÓN ---
-        // Cargar CSV automáticamente al iniciar
-        loadCSVFromGitHub();
+        // Mostrar pantalla de configuración al iniciar (sin cargar CSV automáticamente)
+        loadingSection.classList.add('hidden');
+        configSection.classList.remove('hidden');
     });
     </script>
 </body>
