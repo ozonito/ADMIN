@@ -77,6 +77,7 @@
             background-color: #2d3748;
             border: 2px solid #4a5568;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
         .csv-option:hover {
             border-color: #4299e1;
@@ -92,60 +93,68 @@
 
     <div id="app-container" class="w-full max-w-4xl mx-auto">
 
-        <!-- 1. Pantalla de Configuración -->
+        <!-- 1. Pantalla de Selección de Materia -->
         <div id="setup-screen" class="card p-8 rounded-xl shadow-lg transition-opacity duration-500">
             <div class="text-center">
-                <h1 class="text-3xl font-bold text-white">Flashcards de Oposiciones con IA</h1>
-                <p class="mt-2 text-slate-400">Selecciona tu materia y configura tu cuestionario</p>
+                <h1 class="text-3xl font-bold text-white">Flashcards de Oposiciones</h1>
+                <p class="mt-2 text-slate-400">Selecciona tu materia de estudio</p>
             </div>
             
             <div class="mt-8 space-y-6">
+                <!-- Pantalla de carga -->
                 <div id="loading-section" class="text-center hidden">
                     <div class="loading-spinner mx-auto mb-4"></div>
                     <p class="text-slate-300">Cargando preguntas...</p>
                 </div>
                 
+                <!-- Selección de materias -->
                 <div id="csv-selection" class="space-y-4">
-                    <h3 class="text-xl font-semibold text-white">Selecciona tu materia:</h3>
+                    <h3 class="text-xl font-semibold text-white">Elige tu materia:</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="csv-option p-4 rounded-lg cursor-pointer" data-csv="./ADMINISTRATIVO.csv">
+                        <div class="csv-option p-4 rounded-lg" data-csv="./ADMINISTRATIVO.csv">
                             <h4 class="font-bold text-blue-300">📋 Derecho Administrativo</h4>
                             <p class="text-sm text-slate-400">Procedimiento, régimen jurídico, contratos públicos</p>
                         </div>
-                        <div class="csv-option p-4 rounded-lg cursor-pointer" data-csv="./CONSTITUCIONAL.csv">
+                        <div class="csv-option p-4 rounded-lg" data-csv="./CONSTITUCIONAL.csv">
                             <h4 class="font-bold text-red-300">⚖️ Derecho Constitucional</h4>
-                            <p class="text-sm text-slate-400">Constitución, derechos fundamentales, tribunal constitucional</p>
+                            <p class="text-sm text-slate-400">Constitución, derechos fundamentales</p>
                         </div>
-                        <div class="csv-option p-4 rounded-lg cursor-pointer" data-csv="./CIVIL.csv">
+                        <div class="csv-option p-4 rounded-lg" data-csv="./CIVIL.csv">
                             <h4 class="font-bold text-green-300">🏛️ Derecho Civil</h4>
-                            <p class="text-sm text-slate-400">Personas, bienes, obligaciones, contratos</p>
+                            <p class="text-sm text-slate-400">Personas, bienes, obligaciones</p>
                         </div>
-                        <div class="csv-option p-4 rounded-lg cursor-pointer" data-csv="./PENAL.csv">
+                        <div class="csv-option p-4 rounded-lg" data-csv="./PENAL.csv">
                             <h4 class="font-bold text-purple-300">⚔️ Derecho Penal</h4>
-                            <p class="text-sm text-slate-400">Delitos, faltas, código penal, procedimiento</p>
+                            <p class="text-sm text-slate-400">Delitos, código penal, procedimiento</p>
                         </div>
-                        <div class="csv-option p-4 rounded-lg cursor-pointer" data-csv="./LABORAL.csv">
+                        <div class="csv-option p-4 rounded-lg" data-csv="./LABORAL.csv">
                             <h4 class="font-bold text-yellow-300">👔 Derecho Laboral</h4>
                             <p class="text-sm text-slate-400">Contratos, despidos, seguridad social</p>
                         </div>
-                        <div class="csv-option p-4 rounded-lg cursor-pointer" data-csv="./TRIBUTARIO.csv">
+                        <div class="csv-option p-4 rounded-lg" data-csv="./TRIBUTARIO.csv">
                             <h4 class="font-bold text-orange-300">💰 Derecho Tributario</h4>
-                            <p class="text-sm text-slate-400">Impuestos, hacienda pública, procedimiento tributario</p>
+                            <p class="text-sm text-slate-400">Impuestos, hacienda pública</p>
                         </div>
                     </div>
                 </div>
                 
+                <!-- Configuración del juego -->
                 <div id="config-section" class="hidden">
-                    <div class="mb-4">
+                    <div class="mb-4 p-4 bg-slate-900 rounded-lg">
                         <h4 class="text-lg font-semibold text-white mb-2">Archivo seleccionado:</h4>
                         <p id="selected-file-info" class="text-blue-400 font-medium"></p>
                     </div>
                     <div>
-                        <label for="num-questions" class="block text-sm font-medium text-slate-300">Número de preguntas para el cuestionario</label>
-                        <input type="number" id="num-questions" class="input-dark mt-1 block w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" placeholder="Ej: 10" disabled>
+                        <label for="num-questions" class="block text-sm font-medium text-slate-300 mb-2">
+                            Número de preguntas para el cuestionario
+                        </label>
+                        <input type="number" id="num-questions" 
+                               class="input-dark w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               min="1" placeholder="Ej: 10">
                     </div>
                 </div>
                 
+                <!-- Mensajes informativos -->
                 <div id="info-box" class="text-center text-sm text-slate-300 bg-slate-700 p-3 rounded-lg hidden"></div>
                 <div id="error-box" class="text-center text-sm text-red-300 bg-red-800 bg-opacity-50 p-3 rounded-lg hidden"></div>
             </div>
@@ -160,7 +169,9 @@
         <!-- 2. Pantalla del Cuestionario -->
         <div id="quiz-screen" class="hidden card p-8 rounded-xl shadow-lg transition-opacity duration-500">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-white">Pregunta <span id="current-q-num"></span> de <span id="total-q-num"></span></h2>
+                <h2 class="text-xl font-bold text-white">
+                    Pregunta <span id="current-q-num"></span> de <span id="total-q-num"></span>
+                </h2>
                 <div id="question-category" class="text-sm bg-blue-900 text-blue-300 font-semibold py-1 px-3 rounded-full"></div>
             </div>
             
@@ -170,21 +181,29 @@
 
             <div class="mt-6">
                 <div class="relative">
-                    <textarea id="user-answer" rows="3" class="input-dark w-full p-4 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribe o dicta tu respuesta..."></textarea>
-                    <button id="mic-button" class="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 hover:text-blue-400" title="Contestar por voz">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd" /></svg>
+                    <textarea id="user-answer" rows="3" 
+                              class="input-dark w-full p-4 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                              placeholder="Escribe tu respuesta..."></textarea>
+                    <button id="mic-button" class="absolute top-1/2 right-4 -translate-y-1/2 text-slate-400 hover:text-blue-400" 
+                            title="Contestar por voz">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8h-1a6 6 0 11-12 0H3a7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd" />
+                        </svg>
                     </button>
                 </div>
                 <p id="mic-status" class="text-sm text-center mt-2 text-slate-500 h-5"></p>
             </div>
 
             <div class="mt-4">
-                <button id="verify-button" class="w-full btn-secondary font-bold py-3 px-4 rounded-lg transition-all">Verificar Respuesta</button>
+                <button id="verify-button" class="w-full btn-secondary font-bold py-3 px-4 rounded-lg transition-all">
+                    Ver Respuesta Correcta
+                </button>
             </div>
 
             <!-- Sección de Feedback -->
             <div id="feedback-section" class="hidden mt-6 space-y-4">
                 <div id="feedback-message" class="p-4 text-white font-bold rounded-lg border-l-4 text-center"></div>
+                
                 <div class="p-4 bg-slate-900 rounded-lg">
                     <h4 class="font-bold text-slate-300">Respuesta Correcta:</h4>
                     <p id="correct-answer-text" class="mt-1 text-slate-300"></p>
@@ -192,26 +211,34 @@
                     <p id="reasoning-text" class="mt-1 text-slate-400"></p>
                     
                     <div class="mt-4">
-                        <a id="legal-ref-link" href="#" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline">
+                        <a id="legal-ref-link" href="#" target="_blank" rel="noopener noreferrer" 
+                           class="text-blue-400 hover:text-blue-300 hover:underline">
                             <span class="font-bold">📋 Referencia legal:</span>
                             <span id="legal-ref-text"></span>
                         </a>
                     </div>
                 </div>
                 
-                <!-- Botón y contenedor de IA -->
-                <button id="ai-enhance-button" class="w-full btn-ai font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">Explicar con IA 🤖</button>
+                <!-- Explicación con IA -->
+                <button id="ai-enhance-button" class="w-full btn-ai font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                    Explicación Detallada 🤖
+                </button>
                 <div id="ai-response-container" class="hidden p-4 rounded-lg ai-response-card">
                     <div id="ai-spinner" class="flex items-center justify-center gap-2 text-violet-300">
                         <div class="spinner h-5 w-5 rounded-full border-2 border-transparent"></div>
-                        Analizando...
+                        Generando explicación...
                     </div>
                     <div id="ai-response-content"></div>
                 </div>
 
+                <!-- Botones de evaluación -->
                 <div id="evaluation-buttons" class="grid grid-cols-2 gap-4">
-                    <button id="correct-btn" class="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-all">✅ ¡La acerté!</button>
-                    <button id="incorrect-btn" class="flex items-center justify-center gap-2 w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-all">❌ A repasar</button>
+                    <button id="correct-btn" class="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-all">
+                        ✅ ¡La acerté!
+                    </button>
+                    <button id="incorrect-btn" class="flex items-center justify-center gap-2 w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-all">
+                        ❌ No la sabía
+                    </button>
                 </div>
             </div>
         </div>
@@ -222,6 +249,7 @@
                 <h2 class="text-3xl font-bold text-white">¡Sesión Finalizada!</h2>
                 <p id="final-message" class="mt-4 text-lg text-slate-300"></p>
             </div>
+            
             <div class="mt-8 p-4 bg-slate-900 rounded-lg text-center">
                 <h3 class="text-xl font-bold text-white mb-2">Tus Resultados</h3>
                 <div class="flex justify-center gap-8 text-2xl">
@@ -229,23 +257,16 @@
                     <div><span class="font-bold text-red-400" id="incorrect-count"></span> Incorrectas</div>
                 </div>
             </div>
+            
             <div id="review-section" class="mt-6 hidden">
                 <h3 class="text-xl font-bold text-white mb-4">Conceptos a Repasar</h3>
                 <div id="review-list" class="space-y-4 max-h-60 overflow-y-auto pr-2"></div>
             </div>
-            <div class="mt-6">
-                <h3 class="text-xl font-bold text-white mb-4">Estadísticas de Preguntas</h3>
-                <div class="max-h-60 overflow-y-auto pr-2">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-700 text-slate-300">
-                            <tr><th class="p-2">Pregunta</th><th class="p-2 w-28 text-center">Formulada</th></tr>
-                        </thead>
-                        <tbody id="occurrence-table-body" class="divide-y divide-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
+            
             <div class="mt-8">
-                <button id="restart-button" class="w-full btn-primary font-bold py-3 px-6 rounded-lg transition-all">Empezar de Nuevo</button>
+                <button id="restart-button" class="w-full btn-primary font-bold py-3 px-6 rounded-lg transition-all">
+                    Empezar de Nuevo
+                </button>
             </div>
         </div>
 
@@ -291,51 +312,39 @@
               incorrectCount = document.getElementById('incorrect-count'),
               reviewSection = document.getElementById('review-section'),
               reviewList = document.getElementById('review-list'),
-              occurrenceTableBody = document.getElementById('occurrence-table-body'),
               restartButton = document.getElementById('restart-button');
 
         // --- ESTADO DE LA APP ---
-        let allQuestions = [], quizQuestions = [], correctAnswers = [], incorrectAnswers = [], currentQuestionIndex = 0;
-        let selectedCSV = null;
-        const OCCURRENCE_KEY = 'flashcardOccurrences';
+        let allQuestions = [], 
+            quizQuestions = [], 
+            correctAnswers = [], 
+            incorrectAnswers = [], 
+            currentQuestionIndex = 0,
+            selectedCSV = null;
 
-        // Archivos CSV disponibles
+        // Mapeo de archivos disponibles
         const CSV_FILES = {
             './ADMINISTRATIVO.csv': 'Derecho Administrativo',
-            './CONSTITUCIONAL.csv': 'Derecho Constitucional', 
+            './CONSTITUCIONAL.csv': 'Derecho Constitucional',
             './CIVIL.csv': 'Derecho Civil',
             './PENAL.csv': 'Derecho Penal',
             './LABORAL.csv': 'Derecho Laboral',
             './TRIBUTARIO.csv': 'Derecho Tributario'
         };
 
-        // --- LÓGICA DE LA APP ---
+        // --- FUNCIONES PRINCIPALES ---
 
-        const occurrenceTracker = {
-            get: () => JSON.parse(localStorage.getItem(OCCURRENCE_KEY)) || {},
-            save: (data) => localStorage.setItem(OCCURRENCE_KEY, JSON.stringify(data)),
-            init: (questions) => {
-                const data = occurrenceTracker.get();
-                let updated = false;
-                questions.forEach(q => {
-                    if (q && q.ID && data[q.ID] === undefined) {
-                        data[q.ID] = 0;
-                        updated = true;
-                    }
-                });
-                if (updated) occurrenceTracker.save(data);
-            },
-            increment: (questionId) => {
-                if (!questionId) return;
-                const data = occurrenceTracker.get();
-                if (data[questionId] !== undefined) {
-                    data[questionId]++;
-                    occurrenceTracker.save(data);
-                }
+        // Algoritmo Fisher-Yates para mezcla completamente aleatoria
+        const shuffleArray = (array) => {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
+            return shuffled;
         };
 
-        // Función para parsear CSV mejorada
+        // Función para parsear CSV
         const parseCSV = (text) => {
             const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
             if (lines.length < 2) throw new Error('CSV vacío o sin cabeceras.');
@@ -378,68 +387,70 @@
             return questions;
         };
 
-        // Algoritmo Fisher-Yates para shuffle completamente aleatorio
-        const shuffleArray = (array) => {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        };
-
-        // Función para cargar CSV seleccionado
+        // Cargar archivo CSV seleccionado
         const loadSelectedCSV = async () => {
             if (!selectedCSV) return;
 
             try {
-                loadingSection.classList.remove('hidden');
-                csvSelection.classList.add('hidden');
-                configSection.classList.add('hidden');
+                showLoading();
                 errorBox.classList.add('hidden');
                 
                 const response = await fetch(selectedCSV);
                 if (!response.ok) {
-                    throw new Error(`Error al cargar el archivo: ${response.status} ${response.statusText}`);
+                    throw new Error(`Error al cargar el archivo: ${response.status}`);
                 }
                 
                 const text = await response.text();
                 allQuestions = parseCSV(text);
                 
                 if (allQuestions.length === 0) {
-                    throw new Error("No se pudieron procesar las preguntas. Revisa el formato del CSV.");
+                    throw new Error("No se pudieron procesar las preguntas.");
                 }
 
-                // Shuffle completamente aleatorio usando Fisher-Yates
+                // ¡MEZCLADO COMPLETAMENTE ALEATORIO!
                 allQuestions = shuffleArray(allQuestions);
-
-                occurrenceTracker.init(allQuestions);
                 
-                // Ocultar loading y mostrar configuración
-                loadingSection.classList.add('hidden');
-                configSection.classList.remove('hidden');
+                hideLoading();
+                showConfig();
                 
-                // Mostrar información de éxito
                 const fileName = CSV_FILES[selectedCSV];
-                selectedFileInfo.textContent = `${fileName} - ${allQuestions.length} preguntas cargadas`;
+                selectedFileInfo.textContent = `${fileName} - ${allQuestions.length} preguntas`;
                 infoBox.textContent = `¡Éxito! Preguntas mezcladas completamente al azar.`;
                 infoBox.classList.remove('hidden');
                 
-                // Configurar input de número de preguntas
                 numQuestionsInput.max = allQuestions.length;
                 numQuestionsInput.value = Math.min(10, allQuestions.length);
-                numQuestionsInput.disabled = false;
                 startButton.disabled = false;
 
             } catch (error) {
                 console.error('Error loading CSV:', error);
-                loadingSection.classList.add('hidden');
-                csvSelection.classList.remove('hidden');
-                errorBox.textContent = `Error al cargar las preguntas: ${error.message}`;
+                hideLoading();
+                showCSVSelection();
+                errorBox.textContent = `Error: ${error.message}`;
                 errorBox.classList.remove('hidden');
             }
         };
 
+        // Funciones de interfaz
+        const showLoading = () => {
+            csvSelection.classList.add('hidden');
+            configSection.classList.add('hidden');
+            loadingSection.classList.remove('hidden');
+        };
+
+        const hideLoading = () => {
+            loadingSection.classList.add('hidden');
+        };
+
+        const showConfig = () => {
+            configSection.classList.remove('hidden');
+        };
+
+        const showCSVSelection = () => {
+            csvSelection.classList.remove('hidden');
+        };
+
+        // Formatear referencia legal
         const formatLegalReferenceText = (questionData) => {
             const lawMapping = {
                 'BOE-A-2015-10565': 'Ley 39/2015',
@@ -473,6 +484,7 @@
             return lawText ? `${lawText}${articleText}` : "Ver disposición";
         };
 
+        // Iniciar juego
         const startGame = () => {
             const num = parseInt(numQuestionsInput.value);
             if (isNaN(num) || num <= 0 || num > allQuestions.length) {
@@ -486,18 +498,17 @@
             incorrectAnswers = [];
             currentQuestionIndex = 0;
             
-            // Selección completamente aleatoria usando Fisher-Yates
-            const shuffled = shuffleArray(allQuestions);
+            // ¡SELECCIÓN COMPLETAMENTE ALEATORIA!
+            const shuffledQuestions = shuffleArray(allQuestions);
+            quizQuestions = shuffledQuestions.slice(0, num);
             
-            // Tomar las primeras 'num' preguntas del array mezclado
-            quizQuestions = shuffled.slice(0, num);
-            
-            // Cambiar pantalla
+            // Cambiar a pantalla de juego
             setupScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
             displayQuestion();
         };
 
+        // Mostrar pregunta actual
         const displayQuestion = () => {
             if (currentQuestionIndex >= quizQuestions.length) {
                 showResults();
@@ -505,7 +516,6 @@
             }
             
             const q = quizQuestions[currentQuestionIndex];
-            occurrenceTracker.increment(q.ID);
             
             // Mostrar pregunta
             category.textContent = q.Category;
@@ -542,12 +552,14 @@
             evalButtons.classList.remove('hidden');
         };
         
+        // Mostrar feedback
         const showFeedback = () => {
             verifyButton.classList.add('hidden');
             feedbackSection.classList.remove('hidden');
             feedbackMessage.classList.add('hidden');
         };
 
+        // Manejar evaluación - ¡PASO AUTOMÁTICO!
         const handleEvaluation = (isCorrect) => {
             evalButtons.classList.add('hidden');
             
@@ -557,18 +569,19 @@
                 feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-correct';
             } else {
                 incorrectAnswers.push(quizQuestions[currentQuestionIndex]);
-                feedbackMessage.textContent = '¡Ánimo! Lo importante es aprender de los errores. 💪';
+                feedbackMessage.textContent = '¡Ánimo! Lo importante es aprender. 💪';
                 feedbackMessage.className = 'p-4 text-white font-bold rounded-lg border-l-4 text-center feedback-incorrect';
             }
             feedbackMessage.classList.remove('hidden');
             
-            // Pasar automáticamente a la siguiente pregunta después de 2 segundos
+            // ¡PASO AUTOMÁTICO DESPUÉS DE 2 SEGUNDOS!
             setTimeout(() => {
                 currentQuestionIndex++;
                 displayQuestion();
             }, 2000);
         };
         
+        // Explicación con IA (simulada)
         const getAIEnhancement = async () => {
             const q = quizQuestions[currentQuestionIndex];
             
@@ -578,67 +591,28 @@
             aiResponseContent.innerHTML = '';
 
             try {
-                const prompt = `Actúa como un profesor experto en derecho administrativo español. Explica esta pregunta de oposiciones de forma pedagógica y motivadora:
-
-**Pregunta:** ${q.Question}
-**Respuesta Correcta:** ${q.Answer}
-**Justificación:** ${q.Reasoning}
-
-Proporciona una explicación estructurada que incluya:
-1. 📚 **Concepto clave simplificado** - Explica el concepto de forma clara
-2. 🏛️ **Ejemplo práctico real** - Da un ejemplo concreto de aplicación
-3. 💡 **Truco para recordarlo** - Proporciona una técnica mnemotécnica o analogía
-4. ⚖️ **Importancia jurídica** - Explica por qué es relevante en el derecho administrativo
-
-Usa un tono motivador y educativo. Mantén cada sección concisa pero informativa.`;
-
-                // Usar la función serverless de Netlify
-                const response = await fetch('/.netlify/functions/gemini-ai', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ prompt })
-                });
-
-                const result = await response.json();
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-
-                const aiText = result.response;
-                
-                // Formatear con markdown básico
-                const formattedResponse = aiText
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/\n\n/g, '</p><p>')
-                    .replace(/\n/g, '<br>');
-                
-                aiResponseContent.innerHTML = `
-                    <h5 class="font-bold text-violet-300 mb-3">🤖 Explicación con Google Gemini:</h5>
-                    <div class="text-slate-300">
-                        <p>${formattedResponse}</p>
-                    </div>
-                    <div class="mt-4 p-2 bg-green-900 bg-opacity-30 rounded-lg">
-                        <p class="text-xs text-green-300">✅ Respuesta generada con inteligencia artificial</p>
+                const mockResponse = `
+                    <h5 class="font-bold text-violet-300 mb-3">🧠 Explicación Detallada:</h5>
+                    <div class="space-y-3 text-slate-300">
+                        <p><strong>📚 Concepto clave:</strong> Esta pregunta trata sobre <strong>${q.Category}</strong>. El principio fundamental es que ${q.Answer.split('.')[0].toLowerCase()}.</p>
+                        <p><strong>🏛️ Ejemplo práctico:</strong> Imagina que un ciudadano presenta una solicitud en el ayuntamiento. Este principio garantiza que la administración debe actuar de manera transparente y justa.</p>
+                        <p><strong>💡 Truco para recordar:</strong> Piensa en esta norma como una "garantía de protección" que siempre favorece la seguridad jurídica del ciudadano.</p>
+                        <p><strong>⚖️ Importancia:</strong> Este concepto es fundamental en las oposiciones porque aparece en múltiples contextos del derecho administrativo español.</p>
                     </div>
                 `;
+                
+                aiResponseContent.innerHTML = mockResponse;
                 
             } catch (error) {
-                console.error('Error AI:', error);
-                aiResponseContent.innerHTML = `
-                    <p class="text-red-400">Error al contactar con la IA: ${error.message}</p>
-                    <div class="mt-3 p-3 bg-red-900 bg-opacity-30 rounded-lg">
-                        <p class="text-sm text-red-300">La IA está temporalmente no disponible. Contacta con el administrador.</p>
-                    </div>
-                `;
+                aiResponseContent.innerHTML = `<p class="text-red-400">Error al generar explicación: ${error.message}</p>`;
             } finally {
                 aiSpinner.classList.add('hidden');
             }
         };
 
+        // Mostrar resultados
         const showResults = () => {
             quizScreen.classList.add('hidden');
             resultsScreen.classList.remove('hidden');
@@ -649,11 +623,11 @@ Usa un tono motivador y educativo. Mantén cada sección concisa pero informativ
             const percentage = quizQuestions.length > 0 ? (correctAnswers.length / quizQuestions.length) * 100 : 0;
             
             if (percentage >= 80) {
-                finalMessage.textContent = "¡Magnífico trabajo! Tu esfuerzo está dando frutos. Sigue así.";
+                finalMessage.textContent = "¡Magnífico trabajo! Tu esfuerzo está dando frutos. 🌟";
             } else if (percentage >= 50) {
-                finalMessage.textContent = "¡Buen progreso! Estás construyendo una base sólida. ¡A por la siguiente!";
+                finalMessage.textContent = "¡Buen progreso! Estás construyendo una base sólida. 💪";
             } else {
-                finalMessage.textContent = "Cada error es un paso más hacia el éxito. ¡No te rindas, la constancia es la clave!";
+                finalMessage.textContent = "Cada error es un paso hacia el éxito. ¡Sigue adelante! 🚀";
             }
             
             // Sección de repaso
@@ -668,38 +642,26 @@ Usa un tono motivador y educativo. Mantén cada sección concisa pero informativ
             } else {
                 reviewSection.classList.add('hidden');
             }
-            
-            // Tabla de estadísticas
-            const occurrenceData = occurrenceTracker.get();
-            occurrenceTableBody.innerHTML = allQuestions.map(q => 
-                `<tr>
-                    <td class="p-2">${q.Question.substring(0, 70)}...</td>
-                    <td class="p-2 w-28 text-center font-bold">${occurrenceData[q.ID] || 0}</td>
-                </tr>`
-            ).join('');
         };
         
+        // Reiniciar aplicación
         const restartApp = () => {
             resultsScreen.classList.add('hidden');
             setupScreen.classList.remove('hidden');
             
-            // Resetear a selección inicial
-            loadingSection.classList.add('hidden');
-            configSection.classList.add('hidden');
-            csvSelection.classList.remove('hidden');
-            
             // Resetear selección
+            csvSelection.classList.remove('hidden');
+            configSection.classList.add('hidden');
+            loadingSection.classList.add('hidden');
+            
             document.querySelectorAll('.csv-option').forEach(option => {
                 option.classList.remove('selected');
             });
-            selectedCSV = null;
             
-            // Resetear inputs
+            selectedCSV = null;
             numQuestionsInput.value = '';
-            numQuestionsInput.disabled = true;
             startButton.disabled = true;
             
-            // Ocultar mensajes
             errorBox.classList.add('hidden');
             infoBox.classList.add('hidden');
             
@@ -713,10 +675,10 @@ Usa un tono motivador y educativo. Mantén cada sección concisa pero informativ
 
         // --- EVENT LISTENERS ---
         
-        // Selección de CSV
+        // Selección de archivo CSV
         document.querySelectorAll('.csv-option').forEach(option => {
             option.addEventListener('click', () => {
-                // Remover selección anterior
+                // Quitar selección anterior
                 document.querySelectorAll('.csv-option').forEach(opt => {
                     opt.classList.remove('selected');
                 });
@@ -725,7 +687,7 @@ Usa un tono motivador y educativo. Mantén cada sección concisa pero informativ
                 option.classList.add('selected');
                 selectedCSV = option.dataset.csv;
                 
-                // Cargar CSV
+                // Cargar archivo
                 loadSelectedCSV();
             });
         });
@@ -774,9 +736,7 @@ Usa un tono motivador y educativo. Mantén cada sección concisa pero informativ
         }
 
         // --- INICIAR APLICACIÓN ---
-        loadingSection.classList.add('hidden');
-        configSection.classList.add('hidden');
-        csvSelection.classList.remove('hidden');
+        console.log('Flashcards de Oposiciones cargado correctamente');
     });
     </script>
 </body>
